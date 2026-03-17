@@ -1,0 +1,131 @@
+---
+title: Salary structures
+description: Build salary structures from components, assign them to employees, and understand how structures are selected during a payroll run.
+keywords: [salary structure, salary structure assignment, base salary, payroll frequency, formula]
+---
+
+A **Salary Structure** is a reusable template that defines what an employee earns and what is deducted each pay period. You assemble it from **Salary Components** and then assign it to one or more employees.
+
+## Creating a salary structure
+
+Go to **Payroll > Salary Structure > New**.
+
+### Header fields
+
+| Field | Description |
+|---|---|
+| **Company** | The company this structure belongs to. Structures are company-scoped. |
+| **Currency** | Currency for all component amounts. Must match the employee's salary structure assignment currency. |
+| **Is Active** | Set to *Yes* to make the structure available for assignment and payroll runs. |
+| **Payroll Frequency** | How often the structure is paid: *Monthly*, *Fortnightly*, *Bimonthly*, *Weekly*, or *Daily*. |
+| **Salary Slip Based on Timesheet** | Enable if pay should be derived from submitted timesheets instead of a fixed structure. |
+| **Letter Head** | Default letter head used on the generated salary slip PDF. |
+| **Max Benefits (Amount)** | Annual ceiling for flexible benefit components. |
+| **Leave Encashment Amount Per Day** | Per-day rate used when encashing leave balances. |
+
+### Earnings and deductions
+
+The **Earnings & Deductions** tab holds two child tables:
+
+- **Earnings** — components that add to gross pay (e.g., Basic Salary, HRA, Transport Allowance)
+- **Deductions** — components that reduce net pay (e.g., Provident Fund, Income Tax)
+
+For each row you can set:
+
+| Field | Description |
+|---|---|
+| **Salary Component** | Link to the component master |
+| **Amount** | Fixed currency amount (used when **Amount Based on Formula** is off) |
+| **Amount Based on Formula** | Enable to use a Python formula instead of a fixed amount |
+| **Formula** | Python expression evaluated when the salary slip is generated |
+| **Condition** | Optional Python expression; the component is included only when this evaluates to `True` |
+| **Depends on Payment Days** | Pro-rate the amount proportionally to the employee's payment days |
+
+### Account tab
+
+| Field | Description |
+|---|---|
+| **Mode of Payment** | Default mode used on salary slips generated from this structure |
+| **Payment Account** | Default bank account for payment journal entries |
+
+## Formula-based components
+
+Formulas are Python expressions that the system evaluates per employee at slip generation time. You can reference:
+
+- `base` — the employee's **Base** salary from the salary structure assignment
+- `variable` — the employee's **Variable** amount from the assignment
+- Component abbreviations (e.g., `BS` for Basic Salary, `HRA` for House Rent Allowance)
+- Employee fields such as `employment_type`, `branch`, `department`, `designation`
+- Salary slip fields such as `payment_days`, `leave_without_pay`, `gross_pay`
+
+```python
+# Basic Salary — 50% of base
+base * 0.5
+
+# HRA — 40% of Basic Salary component (abbreviation BS)
+BS * 0.4
+
+# Conditional: apply a flat amount only for interns
+1000 if employment_type == "Intern" else 0
+
+# Pro-rated Transport Allowance
+(payment_days / total_working_days) * 3000
+```
+
+<Note>
+Enable **Amount Based on Formula** on both the Salary Component and the structure row. If you write a formula but leave **Amount Based on Formula** disabled, Frappe HR will warn you and the formula will not be evaluated.
+</Note>
+
+<Warning>
+If a component uses **Depends on Payment Days** and its formula already references a payment-days-based component, you will get a double-deduction. Disable **Depends on Payment Days** on the outer component in that case.
+</Warning>
+
+## Flexible benefits
+
+The **Flexible Benefits** child table lets you allocate a yearly benefit amount per component. Each flexible component must have **Is Flexible Benefit** enabled in its component master. The total across all rows cannot exceed **Max Benefits (Amount)**.
+
+## Salary Structure Assignment
+
+A **Salary Structure Assignment** links one employee to one structure. You must submit the assignment before it takes effect.
+
+### Assignment fields
+
+| Field | Description |
+|---|---|
+| **Employee** | The employee receiving this structure |
+| **Salary Structure** | The structure to assign |
+| **From Date** | Effective date. Payroll uses the assignment whose `from_date` is on or before the slip period end date. |
+| **Company** | Auto-fetched from the employee; must match the structure's company |
+| **Currency** | Auto-fetched from the structure |
+| **Payroll Payable Account** | Account used when posting payroll liabilities; defaults to company-level setting |
+| **Base** | Fixed monthly base salary. Referenced as `base` in formulas. |
+| **Variable** | Optional variable pay amount. Referenced as `variable` in formulas. |
+| **Income Tax Slab** | Tax slab to use when computing income tax for this employee. Mandatory when the structure has a tax component. |
+| **Cost Centers** | Allocate payroll costs across multiple cost centers by percentage (must total 100%). |
+| **Taxable Earnings Till Date** | Opening balance for mid-year joiners: taxable earnings from previous employer in the current payroll period. |
+| **Tax Deducted Till Date** | Opening balance for mid-year joiners: tax already deducted by previous employer. |
+
+### Assigning in bulk
+
+From a **Salary Structure** document, click **Assign Salary Structure** in the toolbar. A dialog lets you filter by **Branch**, **Department**, **Designation**, or **Grade**. For more than 20 employees the assignment is queued in the background.
+
+## How structures are picked during payroll
+
+When a **Payroll Entry** runs, it filters for salary structures that match all of:
+
+1. Same **Company**
+2. Same **Currency**
+3. Same **Payroll Frequency**
+4. `Is Active = Yes` and submitted (`docstatus = 1`)
+
+For each employee, the system picks the assignment whose `from_date` is the latest date that is still on or before the payroll period's end date. This means you can create a new assignment with a future `from_date` to change an employee's structure without affecting the current period.
+
+<Tip>
+To give an employee a salary revision, create a new **Salary Structure Assignment** with the revised **Base** and the revision date as **From Date**. The old assignment remains intact for historical payroll.
+</Tip>
+
+## Multiple currency support
+
+Each salary structure is denominated in a single currency. If your company pays some employees in a foreign currency, create a separate structure for that currency. The **Payroll Entry** has an **Exchange Rate** field that converts foreign-currency slip amounts into the company currency for accounting entries.
+
+The **Payroll Payable Account** currency must match either the structure's currency or the company's default currency.

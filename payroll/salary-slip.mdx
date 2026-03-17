@@ -1,0 +1,138 @@
+---
+title: Salary slips
+description: Understand salary slip fields, create slips manually or in bulk, email them to employees, and amend submitted slips.
+keywords: [salary slip, pay slip, gross pay, net pay, leave deduction, loan deduction, email salary slip]
+---
+
+A **Salary Slip** is the payroll document for a single employee for a single pay period. It records every earning, deduction, and adjustment used to arrive at the employee's net pay.
+
+## Salary slip fields
+
+### Employee & Payroll tab
+
+| Field | Description |
+|---|---|
+| **Employee** | The employee being paid |
+| **Posting Date** | Date the slip is recorded |
+| **Payroll Frequency** | Frequency inherited from the salary structure |
+| **Start Date / End Date** | Pay period dates |
+| **Salary Structure** | The structure used to calculate this slip |
+| **Payroll Entry** | The batch payroll entry that created this slip (blank for manually created slips) |
+| **Currency / Exchange Rate** | Currency and conversion rate |
+| **Mode of Payment** | Payment method (bank transfer, cheque, etc.) |
+| **Status** | *Draft*, *Submitted*, *Cancelled*, or *Withheld* |
+| **Deduct Tax For Unsubmitted Tax Exemption Proof** | Override tax calculation to ignore unsubmitted investment proofs |
+
+### Payment Days tab
+
+Payment days determine how much of the fixed/formula amounts are actually paid when an employee is absent or on unpaid leave.
+
+| Field | Description |
+|---|---|
+| **Total Working Days** | Calendar days in the pay period excluding holidays |
+| **Leave Without Pay** | Days of unpaid leave taken |
+| **Absent Days** | Absent days as per attendance |
+| **Unmarked Days** | Days with no attendance record |
+| **Payment Days** | Effective days used to pro-rate payment-days-dependent components |
+
+<Note>
+How unmarked attendance is treated (present or absent), and whether holidays count as working days, is controlled by **Payroll Settings > Payroll Based On** and related options.
+</Note>
+
+### Earnings & Deductions tab
+
+The **Earnings** table lists all earning components with their computed amounts. The **Deductions** table lists all deduction components.
+
+Key totals at the bottom:
+
+| Field | Description |
+|---|---|
+| **Gross Pay** | Sum of all earnings |
+| **Total Deduction** | Sum of all deductions |
+| **Net Pay** | Gross Pay minus Total Deduction |
+| **Rounded Total** | Net pay rounded to the nearest currency unit |
+| **Year to Date** | Cumulative net pay for the employee from the start of the payroll period |
+| **Month to Date** | Net pay accumulated in the current month |
+| **Total in Words** | Net pay written out in words |
+
+### Accrued benefits
+
+If the employee has flexible benefit components using accrual payout methods, the **Accrued Benefits** section shows the balance accumulated in each component.
+
+### Income tax calculation breakup
+
+The slip shows a detailed tax calculation section:
+
+| Field | Description |
+|---|---|
+| **CTC** | Cost to Company — total annual earnings including employer contributions |
+| **Total Earnings** | Total taxable earnings for the period |
+| **Non Taxable Earnings** | Earnings excluded from income tax computation |
+| **Standard Tax Exemption Amount** | Flat exemption defined in the Income Tax Slab |
+| **Tax Exemption Declaration** | Declared investments and deductions (HRA, 80C, etc.) |
+| **Deductions Before Tax Calculation** | Components marked as **Exempted from Income Tax** |
+| **Annual Taxable Amount** | Amount on which income tax is computed |
+| **Income Tax Deducted Till Date** | Tax already collected in earlier slips this period |
+| **Current Month Income Tax** | Tax to deduct in this slip |
+| **Future Income Tax Deductions** | Projected remaining tax for the rest of the payroll period |
+
+### Loans
+
+If the Lending app is installed, a **Loans** section shows repayment deductions linked to active employee loans. The total loan repayment is deducted from the bank entry amount when computing payment.
+
+### Leave details
+
+The **Leave Details** section shows a per-leave-type summary of the employee's leave balance, which is printed on the salary slip.
+
+## Manual vs bulk creation
+
+### Manual creation
+
+To create a slip for a single employee:
+
+1. Go to **Payroll > Salary Slip > New**.
+2. Set the **Employee** and **Posting Date**.
+3. The system auto-fetches the salary structure and calculates all components.
+4. Review, save, and submit.
+
+### Bulk creation via payroll entry
+
+For a full payroll run, use a **Payroll Entry**. Submitting the entry creates all salary slips in bulk and posts the accrual journal entry automatically. See [Payroll entry](/payroll/payroll-entry).
+
+<Tip>
+You can preview a salary slip before submitting by clicking **Preview Salary Slip** on the Salary Structure form. Select any employee assigned to the structure to see how their slip would look.
+</Tip>
+
+## Email salary slips to employees
+
+Frappe HR can automatically email a PDF of the salary slip to each employee when slips are submitted through a payroll entry.
+
+Enable this in **Payroll > Payroll Settings > Email Salary Slip to Employee**.
+
+To send slips manually from the salary slip form, use the **Email** button in the toolbar.
+
+## Salary slip PDF
+
+The salary slip prints using the default print format. You can create a custom print format in **Settings > Print Format** to add your company branding, regional fields, or additional tables.
+
+The **Letter Head** on the slip (fetched from the salary structure) controls the header and footer.
+
+## Amending submitted slips
+
+You cannot edit a submitted salary slip directly. To correct it:
+
+<Steps>
+  <Step title="Cancel the salary slip">
+    Open the submitted slip and click **Cancel**. If the slip was created through a payroll entry, cancelling the entry cancels all its slips at once.
+  </Step>
+  <Step title="Amend the slip">
+    Click **Amend** to create a new draft copy. The **Amended From** field links back to the original.
+  </Step>
+  <Step title="Make corrections and resubmit">
+    Update any amounts or components, then save and submit the amended slip.
+  </Step>
+</Steps>
+
+<Warning>
+Cancelling a salary slip that is linked to a submitted journal entry will not automatically cancel the journal entry. Cancel the journal entry separately or use the payroll entry's cancel flow, which handles all linked documents.
+</Warning>

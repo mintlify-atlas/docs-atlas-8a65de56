@@ -1,0 +1,156 @@
+---
+title: Leave applications
+description: Apply for leave, get approvals, and manage compensatory and encashment requests.
+---
+
+A **Leave Application** (series `HR-LAP-YYYY-`) is the document an employee submits when requesting time off. When approved and submitted, it deducts days from the employee's leave balance and automatically updates the corresponding **Attendance** records.
+
+## Applying for leave
+
+<Steps>
+  <Step title="Open Leave Application">
+    Go to **HR > Leave Management > Leave Application > New**, or use the **Apply Leave** shortcut in the HR portal.
+  </Step>
+  <Step title="Fill in the basic details">
+    - **Employee** — defaults to the logged-in employee
+    - **Leave Type** — select the type of leave
+    - **From Date** and **To Date** — the leave period
+    - **Reason** — optional text explaining the reason
+  </Step>
+  <Step title="Handle half-day leave">
+    Check **Half Day** if the employee is taking only half a day. If the application spans multiple days, the **Half Day Date** field appears so you can indicate which specific day is the half day.
+  </Step>
+  <Step title="Set the approver">
+    The **Leave Approver** field pre-fills from the employee record or the department's approver list. You can override it if needed.
+
+    Enable **Follow via Email** to receive email notifications when the status changes.
+  </Step>
+  <Step title="Save">
+    Saving the application sends a notification to the approver if **Send Leave Notification** is enabled in **HR Settings**.
+  </Step>
+</Steps>
+
+## Leave Application fields reference
+
+| Field | Description |
+|-------|-------------|
+| **Employee** | The employee taking leave. |
+| **Leave Type** | The category of leave being applied for. |
+| **From Date** | First day of leave. |
+| **To Date** | Last day of leave. |
+| **Half Day** | Whether any day in the application is a half day. |
+| **Half Day Date** | The specific date that is a half day (required when the application spans multiple days and Half Day is checked). |
+| **Total Leave Days** | Calculated automatically; excludes holidays unless **Include holidays within leaves as leaves** is set on the leave type. |
+| **Reason** | Optional explanation. |
+| **Leave Balance Before Application** | Remaining balance at the time the application was created (read-only). |
+| **Leave Approver** | The user who must approve this application. |
+| **Status** | Open → Approved or Rejected → Cancelled. |
+| **Posting Date** | Date the application was created. |
+| **Follow via Email** | Send email notifications on status change. |
+
+## Approval workflow
+
+<Tabs>
+  <Tab title="Standard (no workflow)">
+    Without a custom workflow:
+
+    1. Employee saves the application (status: **Open**).
+    2. The leave approver receives an email notification.
+    3. The approver opens the application, sets **Status** to **Approved** or **Rejected**, and submits.
+    4. Only an approved application can be submitted. An open or cancelled application cannot be submitted.
+
+    <Note>
+    If **Prevent Self Leave Approval** is enabled in **HR Settings**, an employee cannot approve their own leave application.
+    </Note>
+  </Tab>
+  <Tab title="With workflow">
+    If you configure a Frappe workflow on **Leave Application**, the status transitions are governed by the workflow states and transitions. The self-approval check is bypassed when a workflow is active.
+  </Tab>
+</Tabs>
+
+### Leave approver resolution
+
+Frappe HR determines the leave approver in this order:
+
+1. **Leave Approver** set directly on the employee record.
+2. First approver in the **Leave Approvers** table on the employee's **Department**.
+3. Field left blank — the employee must manually select an approver on each application.
+
+Users with the **HR Manager** or **HR User** role can approve any leave application regardless of the approver field.
+
+## Validations
+
+Frappe HR checks the following when you save or submit a leave application:
+
+| Validation | What it checks |
+|------------|----------------|
+| **Leave balance** | The employee has enough balance. Throws an error unless **Allow Negative Balance** is enabled on the leave type. |
+| **Overlap** | No other open or approved application exists for the same date range. |
+| **Maximum consecutive days** | The total consecutive leave days (including adjacent existing applications) do not exceed **Maximum Consecutive Leaves Allowed**. |
+| **Applicable after** | The employee has enough working days since joining to be eligible. |
+| **Allocation period** | The application dates fall within a submitted allocation (unless the leave type allows negative balance). |
+| **Attendance conflict** | No submitted **Present** or **Work From Home** attendance record exists for the dates. |
+| **Block dates** | The application does not fall on a **Leave Block List** date (for approved status). |
+| **Salary processed** | For LWP leave types, no salary slip has already been processed for the date range. |
+| **Back-dated applications** | If **Restrict Backdated Leave Application** is enabled in **HR Settings**, only users with the configured role can submit back-dated applications. |
+
+## What happens when a leave is approved
+
+When an approved leave application is submitted:
+
+1. **Leave Ledger Entry** records are created to deduct the leave days from the balance.
+2. **Attendance** records are created or updated for each working day in the leave period:
+   - Days where the employee is on leave become **On Leave**.
+   - The half-day date (if any) becomes **Half Day**.
+   - Existing **Absent** attendance records for those dates are updated to reflect the leave.
+3. Holiday dates within the range are skipped unless **Include holidays within leaves as leaves** is checked on the leave type.
+
+## Compensatory leave requests
+
+When an employee works on a holiday, they can claim compensatory leave by submitting a **Compensatory Leave Request**.
+
+<Steps>
+  <Step title="Open Compensatory Leave Request">
+    Go to **HR > Leave Management > Compensatory Leave Request > New**.
+  </Step>
+  <Step title="Fill in the details">
+    - **Employee** — the employee who worked the holiday
+    - **Leave Type** — must have **Is Compensatory** checked
+    - **Work From Date** and **Work End Date** — the dates worked
+    - **Half Day** — check if only half the holiday was worked; set **Half Day Date**
+    - **Reason** — mandatory explanation
+  </Step>
+  <Step title="Submit">
+    Submitting the request creates a **Leave Allocation** record for the compensatory leave type. The employee can then use those days via a standard **Leave Application**.
+  </Step>
+</Steps>
+
+## Leave encashment requests
+
+If a leave type has **Allow Encashment** enabled, employees can convert unused leave days into cash via a **Leave Encashment** document.
+
+<Steps>
+  <Step title="Open Leave Encashment">
+    Go to **HR > Leave Management > Leave Encashment > New**.
+  </Step>
+  <Step title="Select the details">
+    - **Employee** — the employee encashing
+    - **Leave Type** — must have **Allow Encashment** checked
+    - **Leave Period** — the period whose allocation will be drawn down
+    - **Encashment Date** — defaults to today
+  </Step>
+  <Step title="Review the calculated values">
+    The system fetches the current **Leave Balance** and calculates **Actual Encashable Days** (balance minus **Non-Encashable Leaves**). Enter **Encashment Days** (must not exceed actual encashable days). The **Encashment Amount** is calculated automatically based on the **Earning Component** daily rate.
+  </Step>
+  <Step title="Choose the payment method">
+    - Leave **Pay Via Payment Entry** unchecked to include the encashment in the next salary slip via an **Additional Salary** record.
+    - Check **Pay Via Payment Entry** to generate a standalone **Payment Entry** instead, and fill in **Expense Account**, **Payable Account**, and **Cost Center**.
+  </Step>
+  <Step title="Submit">
+    Submitting the encashment deducts the encashed days from the leave balance and either creates an **Additional Salary** or a **Payment Entry** depending on the payment method chosen.
+  </Step>
+</Steps>
+
+<Note>
+The encashment amount calculation relies on the employee's salary slip data. If no salary slip exists, the amount cannot be calculated automatically.
+</Note>

@@ -1,0 +1,121 @@
+---
+title: "Local setup"
+description: "Set up a full Frappe HR development environment on your local machine using Frappe bench"
+---
+
+<Note>
+Frappe HR requires **ERPNext** and **Frappe Framework** ≥ 17.0.0. The bench tool manages both as separate apps on a shared site.
+</Note>
+
+<Steps>
+
+<Step title="Install bench">
+
+Follow the [Frappe bench installation guide](https://frappeframework.com/docs/user/en/installation) for your operating system. Bench installs Python, Node.js, MariaDB, Redis, and the `bench` CLI.
+
+After installation, start the bench server and keep it running in a terminal:
+
+```bash
+bench start
+```
+</Step>
+
+<Step title="Create a new site">
+
+In a **separate terminal window**, create a new Frappe site:
+
+```bash
+bench new-site hrms.localhost
+```
+
+You will be prompted for the MariaDB root password and the **Administrator** password for the new site.
+</Step>
+
+<Step title="Install ERPNext">
+
+Fetch the ERPNext app and install it on your site:
+
+```bash
+bench get-app erpnext
+```
+</Step>
+
+<Step title="Install Frappe HR">
+
+Fetch the Frappe HR app and install it on your site:
+
+```bash
+bench get-app hrms
+bench --site hrms.localhost install-app hrms
+```
+</Step>
+
+<Step title="Add the site to your hosts file">
+
+Map the site hostname to `127.0.0.1` so your browser can reach it:
+
+```bash
+bench --site hrms.localhost add-to-hosts
+```
+</Step>
+
+<Step title="Access the site">
+
+Open `http://hrms.localhost:8080` in your browser. Log in with:
+
+- **Username**: `Administrator`
+- **Password**: the password you set in step 2
+
+</Step>
+
+</Steps>
+
+## Frontend development
+
+The Frappe HR PWA lives in `frontend/`. To start the Vite hot-reload dev server:
+
+<Steps>
+
+<Step title="Install dependencies">
+
+```bash
+cd frontend
+yarn
+```
+</Step>
+
+<Step title="Start the Vite dev server">
+
+```bash
+yarn dev
+```
+
+The PWA dev server starts at `http://localhost:5173`. It proxies API requests to your local bench site, so you need bench running at the same time.
+</Step>
+
+<Step title="Build for production">
+
+When you want to test the compiled output served by bench:
+
+```bash
+yarn build
+```
+
+This places the built files in `hrms/public/frontend/` and copies the HTML entry point to `hrms/www/hrms.html`, which bench serves at `/hrms`.
+</Step>
+
+</Steps>
+
+## Roster app development
+
+The shift roster app lives in `roster/`. It uses the same Vite + Vue 3 setup:
+
+```bash
+cd roster
+yarn
+yarn dev
+```
+
+<Tip>
+Run `bench --site hrms.localhost set-config developer_mode 1` to enable developer mode, which disables caching and allows you to edit DocType JSON files directly from the Desk.
+</Tip>

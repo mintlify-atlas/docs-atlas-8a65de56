@@ -1,0 +1,160 @@
+---
+title: "Regional overrides"
+description: "How Frappe HR swaps country-specific calculation logic at runtime, and how to add your own regional override"
+---
+
+## How regional overrides work
+
+Frappe HR defines generic calculation functions in `hrms/hr/utils.py`. When a company belongs to a specific country, Frappe replaces those functions with region-specific implementations at runtime.
+
+The replacement map lives in `hooks.py`:
+
+```python
+# hrms/hooks.py
+regional_overrides = {
+    "India": {
+        "hrms.hr.utils.calculate_annual_eligible_hra_exemption": "hrms.regional.india.utils.calculate_annual_eligible_hra_exemption",
+        "hrms.hr.utils.calculate_hra_exemption_for_period": "hrms.regional.india.utils.calculate_hra_exemption_for_period",
+        "hrms.hr.utils.calculate_tax_with_marginal_relief": "hrms.regional.india.utils.calculate_tax_with_marginal_relief",
+    },
+}
+```
+
+The key in the outer dict is the **country name** as stored in the Company doctype (e.g. `"India"`). Each nested key is the canonical dotted Python path to the default function, and the value is the path to the override.
+
+Frappe's `call_regional_function` helper looks up the current company's country, finds the matching override, and calls it in place of the default implementation. If no override is registered for the company's country, the default function runs unchanged.
+
+<Note>
+Regional override functions must have **the same signature** as the default function they replace. The caller passes the same arguments regardless of which implementation runs.
+</Note>
+
+## India-specific overrides
+
+Frappe HR ships with three India-specific overrides in `hrms/regional/india/utils.py`.
+
+### HRA exemption calculation
+
+India's Income Tax Act allows employees renting a house to claim a **House Rent Allowance (HRA)** exemption. The exempt amount is the minimum of three values:
+
+1. The actual HRA component received from the employer
+2. Actual rent paid minus 10% of basic salary
+3. 50% of basic salary (metro city) or 40% of basic salary (non-metro city)
+
+```python
+# hrms/regional/india/utils.py
+def calculate_hra_exemption(
+    salary_structure, annual_basic, annual_hra, monthly_house_rent, rented_in_metro_city
+):
+    exemptions = []
+    # Case 1: Actual HRA received
+    exemptions.append(annual_hra)
+    # Case 2: Actual annual rent minus 10% of basic
+    actual_annual_rent = monthly_house_rent * 12
+    exemptions.append(flt(actual_annual_rent) - flt(annual_basic * 0.1))
+    # Case 3: 50% or 40% of basic depending on city type
+    exemptions.append(annual_basic * 0.5 if rented_in_metro_city else annual_basic * 0.4)
+    return min(exemptions)
+```
+
+`calculate_annual_eligible_hra_exemption(doc)` is the override entry point. It reads the Basic and HRA components from the company configuration, iterates over salary structure assignments for the payroll period, and returns:
+
+```python
+frappe._dict({
+    "hra_amount": hra_amount,
+    "annual_exemption": annual_exemption,
+    "monthly_exemption": monthly_exemption,
+})
+```
+
+### Marginal tax relief
+
+`calculate_tax_with_marginal_relief(tax_slab, tax_amount, annual_taxable_earning)` applies India's marginal relief rule: if taxable income is between `tax_relief_limit` and `marginal_relief_limit` on the Income Tax Slab, and the tax payable exceeds the income above the relief threshold, the tax is capped at that excess income amount.
+
+```python
+def calculate_tax_with_marginal_relief(tax_slab, tax_amount, annual_taxable_earning):
+    if tax_slab.get("marginal_relief_limit"):
+        tax_relief_limit = tax_slab.tax_relief_limit or 0
+        marginal_relief_limit = tax_slab.marginal_relief_limit or 0
+
+        if annual_taxable_earning > tax_relief_limit and annual_taxable_earning < marginal_relief_limit:
+            income_excess_over_tax_relief = annual_taxable_earning - tax_slab.tax_relief_limit
+            if income_excess_over_tax_relief < tax_amount:
+                tax_amount = income_excess_over_tax_relief
+    return tax_amount
+```
+
+## Adding a regional override for a new country
+
+To add country-specific logic for, say, **Germany**:
+
+<Steps>
+
+<Step title="Create the regional module">
+
+Create a directory and Python file for your country:
+
+```
+hrms/regional/germany/__init__.py
+hrms/regional/germany/utils.py
+```
+</Step>
+
+<Step title="Implement the override function">
+
+Write a function with the **exact same signature** as the default. For example, if you want a custom tax calculation:
+
+```python
+# hrms/regional/germany/utils.py
+import frappe
+
+def calculate_tax_with_marginal_relief(tax_slab, tax_amount, annual_taxable_earning):
+    """
+    Germany-specific marginal relief logic.
+    tax_slab: Income Tax Slab document
+    tax_amount: float, tax before relief
+    annual_taxable_earning: float
+    """
+    # Your country-specific logic here
+    return tax_amount
+```
+</Step>
+
+<Step title="Register the override in hooks.py">
+
+Add your country and function mapping to `regional_overrides` in `hrms/hooks.py`:
+
+```python
+regional_overrides = {
+    "India": {
+        "hrms.hr.utils.calculate_annual_eligible_hra_exemption": "hrms.regional.india.utils.calculate_annual_eligible_hra_exemption",
+        "hrms.hr.utils.calculate_hra_exemption_for_period": "hrms.regional.india.utils.calculate_hra_exemption_for_period",
+        "hrms.hr.utils.calculate_tax_with_marginal_relief": "hrms.regional.india.utils.calculate_tax_with_marginal_relief",
+    },
+    "Germany": {
+        "hrms.hr.utils.calculate_tax_with_marginal_relief": "hrms.regional.germany.utils.calculate_tax_with_marginal_relief",
+    },
+}
+```
+</Step>
+
+<Step title="Run migrations">
+
+After modifying `hooks.py`, run a migration so Frappe picks up the new hook registrations:
+
+```bash
+bench --site {your-site} migrate
+```
+</Step>
+
+</Steps>
+
+<Warning>
+If you are adding regional overrides in a **custom app** (not in the Frappe HR source itself), declare the `regional_overrides` dict in your custom app's own `hooks.py`. Frappe merges hook registrations across all installed apps.
+</Warning>
+
+## Override function signature rules
+
+- The override function must accept the **same positional and keyword arguments** as the default.
+- It must return the **same type** as the default (Frappe checks the return value, not the type annotation).
+- You can import and call the default implementation from your override if you only need to extend it, not replace it entirely.
+- The country name key is **case-sensitive** and must match the company's `country` field value exactly as stored in the database.

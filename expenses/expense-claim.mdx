@@ -1,0 +1,195 @@
+---
+title: "Expense claims"
+description: "Submit, approve, and reimburse employee expense claims with full accounting integration."
+keywords: ["expense claim", "expense approver", "expense claim type", "reimbursement", "payable account", "cost center", "taxes and charges"]
+---
+
+# Expense claims
+
+An **Expense Claim** is the primary document employees use to request reimbursement for out-of-pocket business expenses. Each claim lists individual expense lines, supports attached receipts, allows tax entries, and can be offset against outstanding **Employee Advance** payments.
+
+## Before you begin
+
+Set up at least one **Expense Claim Type** and ensure your company has a **Default Expense Claim Payable Account** configured. The payable account is required before submitting a claim.
+
+## Expense Claim Type
+
+**Expense Claim Type** defines the categories of expense your organisation allows (for example, Travel, Meals, or Accommodation) and maps each category to a ledger account.
+
+To create an **Expense Claim Type**, go to **HR > Expense Claims > Expense Claim Type > New**.
+
+| Field | Description |
+|---|---|
+| **Expense Claim Type** | The name of the expense category (e.g. "Travel") |
+| **Accounts** (table) | Per-company mapping to a **Default Account** in the chart of accounts |
+| **Deferred Expense Account** | Check this if the account represents a deferred expense |
+| **Description** | Optional notes about when to use this type |
+
+<Tip>
+Create a separate **Expense Claim Type** for each expense category you track in your chart of accounts — for example, one for airfare, one for accommodation, and one for meals.
+</Tip>
+
+## Creating an expense claim
+
+Go to **HR > Expense Claims > Expense Claim > New**.
+
+### Expenses & Advances tab
+
+**Header fields**
+
+| Field | Description |
+|---|---|
+| **From Employee** | The employee requesting reimbursement |
+| **Department** | Auto-fetched from the employee record |
+| **Expense Approver** | The user responsible for approving this claim |
+| **Approval Status** | Set by the approver: Draft, Approved, Rejected, or Cancelled |
+| **Currency** | Defaults to the employee's salary currency |
+| **Exchange Rate** | Applies when the claim currency differs from the company currency |
+
+**Expenses table**
+
+Each row in the **Expenses** table represents one expense line.
+
+| Field | Description |
+|---|---|
+| **Expense Date** | Date the expense was incurred |
+| **Expense Type** | Link to an **Expense Claim Type** |
+| **Description** | Brief description of the expense |
+| **Amount** | The amount the employee claims |
+| **Sanctioned Amount** | The amount the approver agrees to pay (cannot exceed **Amount**) |
+| **Cost Center** | Required for posting — defaults from the expense type or company |
+| **Project** | Optional project dimension |
+| **Default Account** | Populated automatically from the **Expense Claim Type** for the company |
+
+<Note>
+Every expense line must have a **Cost Center** before you can submit the claim.
+</Note>
+
+**Attaching receipts**
+
+Attach scanned receipts or photos directly to the **Expense Claim** document using the **Attachments** section in the form sidebar. Each line item can also reference uploaded files via the standard Frappe attachment mechanism.
+
+### Taxes & Charges
+
+Expand the **Taxes & Charges** section to add tax entries.
+
+| Field | Description |
+|---|---|
+| **Account Head** | The tax or charge ledger account |
+| **Rate** | Percentage applied to the **Total Sanctioned Amount** |
+| **Tax Amount** | Calculated automatically if you enter a rate; editable for fixed amounts |
+| **Cost Center** | Dimension for the tax entry |
+
+The **Total Taxes and Charges** is added to the **Total Sanctioned Amount** to produce the **Grand Total**.
+
+### Advance Payments
+
+If the employee has outstanding **Employee Advance** records, you can link them here to reduce the amount owed.
+
+<Steps>
+  <Step title="Open the Advances section">
+    In the **Expenses & Advances** tab, scroll to the **Advance Payments** section.
+  </Step>
+  <Step title="Fetch advances">
+    Click **Get Advances** to populate all open (unclaimed) advances for the employee. You can also add a specific advance row manually.
+  </Step>
+  <Step title="Set Allocated Amount">
+    In each advance row, set the **Allocated Amount** — the portion of that advance being consumed by this claim. The allocated amount cannot exceed the advance's **Unclaimed Amount**.
+  </Step>
+</Steps>
+
+The **Grand Total** formula is:
+
+```
+Grand Total = Total Sanctioned Amount + Total Taxes and Charges − Total Advance Amount
+```
+
+### Accounting tab
+
+| Field | Description |
+|---|---|
+| **Posting Date** | The date of the accounting entry |
+| **Is Paid** | Check this to record payment at submission time (requires **Mode of Payment**) |
+| **Mode of Payment** | Visible only when **Is Paid** is checked |
+| **Bank / Cash Account** | The bank or cash account used for payment |
+| **Payable Account** | The creditor account for the employee (required to submit) |
+| **Cost Center** | Header-level cost center used when line-level is blank |
+| **Project** | Links the claim to a project; updates the project's total expense |
+
+## Approval workflow
+
+<Steps>
+  <Step title="Submit for approval">
+    The employee saves the claim. On save, the system automatically shares the document with the **Expense Approver** and sends a notification.
+  </Step>
+  <Step title="Approver reviews">
+    The **Expense Approver** opens the claim. They can edit the **Sanctioned Amount** on each line to a value equal to or less than the claimed amount, then set **Approval Status** to **Approved** or **Rejected**.
+  </Step>
+  <Step title="Submit">
+    Once **Approval Status** is **Approved**, the employee or approver submits the document. Frappe HR posts the GL entries at this point.
+  </Step>
+</Steps>
+
+<Note>
+You cannot submit a claim with **Approval Status** still set to **Draft**. The approver must explicitly approve or reject before submission.
+</Note>
+
+<Tip>
+Enable **Prevent Self Expense Approval** in **HR Settings** to ensure that no employee can set their own claim to **Approved** when no workflow is active.
+</Tip>
+
+## Accounting entries on submit
+
+When you submit an **Expense Claim**, Frappe HR creates the following GL entries:
+
+| Entry | Debit | Credit |
+|---|---|---|
+| Expense accounts | Each line's **Default Account** by the **Sanctioned Amount** | — |
+| Payable account | — | **Grand Total** (employee as party) |
+| Advance account (if linked) | — | Allocated advance amount |
+| Tax accounts | Tax amount per tax row | — |
+
+If **Is Paid** is checked, an additional payment entry is posted:
+
+| Entry | Debit | Credit |
+|---|---|---|
+| Payable account | Grand Total | — |
+| Bank / Cash account | — | Grand Total |
+
+Exchange gain/loss on linked advances in a foreign currency is automatically booked as a **Journal Entry** on submit.
+
+## Payment
+
+For claims that are not marked **Is Paid** at submission, two payment methods are available.
+
+**Via Payment Entry**
+
+Click **Make > Payment Entry** from the submitted claim. The system creates a Payment Entry with the outstanding payable amount pre-filled.
+
+**Via Journal Entry**
+
+If **Make Payment via Journal Entry** is enabled in **Accounts Settings**, click **Make > Journal Entry** instead. The system creates a Bank Entry referencing the claim.
+
+Once the payment is submitted, Frappe HR updates **Total Amount Reimbursed** and sets the claim **Status** to **Paid**.
+
+## Claim statuses
+
+| Status | Meaning |
+|---|---|
+| **Draft** | Saved but not yet submitted |
+| **Submitted** | Submitted; GL entries posted |
+| **Unpaid** | Approved and submitted; awaiting payment |
+| **Paid** | Fully reimbursed or marked as paid |
+| **Rejected** | Approver set Approval Status to Rejected |
+| **Cancelled** | Claim was cancelled; GL entries reversed |
+
+## Totals reference
+
+| Field | Formula |
+|---|---|
+| **Total Claimed Amount** | Sum of **Amount** across all expense lines |
+| **Total Sanctioned Amount** | Sum of **Sanctioned Amount** across all expense lines |
+| **Total Taxes and Charges** | Sum of all tax row amounts |
+| **Total Advance Amount** | Sum of all allocated advance amounts |
+| **Grand Total** | Total Sanctioned Amount + Total Taxes and Charges − Total Advance Amount |
+| **Total Amount Reimbursed** | Amount paid via Payment Entry or Journal Entry |

@@ -1,0 +1,101 @@
+---
+title: "Docker setup"
+description: "Run Frappe HR locally using Docker Compose — the fastest way to get a working development environment"
+---
+
+## Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) installed and running
+- `docker-compose` v1.29+ (included with Docker Desktop)
+- `git`
+
+## Starting the environment
+
+<Steps>
+
+<Step title="Clone the repository">
+
+```bash
+git clone https://github.com/frappe/hrms
+```
+</Step>
+
+<Step title="Start Docker Compose">
+
+Navigate to the `docker/` directory and bring up all services:
+
+```bash
+cd hrms/docker
+docker-compose up
+```
+
+The first run takes several minutes. The `init.sh` script inside the container:
+
+1. Initialises a new Frappe bench
+2. Fetches ERPNext and Frappe HR
+3. Creates a site called `hrms.localhost`
+4. Installs Frappe HR on the site
+5. Enables the scheduler and developer mode
+6. Starts `bench start`
+
+Watch the logs until you see bench start output — the site is ready at that point.
+</Step>
+
+<Step title="Access the site">
+
+Open `http://localhost:8000` in your browser. The Frappe HR login screen loads automatically.
+</Step>
+
+<Step title="Log in">
+
+Use the default credentials:
+
+- **Username**: `Administrator`
+- **Password**: `admin`
+
+</Step>
+
+</Steps>
+
+## Services
+
+Docker Compose starts three services defined in `docker/docker-compose.yml`:
+
+| Service | Image | Purpose |
+|---|---|---|
+| `mariadb` | `mariadb:10.8` | Database server (port not exposed to host) |
+| `redis` | `redis:alpine` | Cache and queue backend |
+| `frappe` | `frappe/bench:latest` | Frappe bench (bench + gunicorn + workers); exposes ports **8000** and **9000** |
+
+MariaDB data is persisted in a named Docker volume (`mariadb-data`), so your site survives container restarts.
+
+## Stopping and restarting
+
+```bash
+# Stop all containers (data preserved)
+docker-compose stop
+
+# Start again — bench start runs automatically, no re-install
+docker-compose start
+
+# Destroy everything including the MariaDB volume
+docker-compose down -v
+```
+
+<Warning>
+Running `docker-compose down -v` deletes the `mariadb-data` volume. All site data — documents, users, settings — will be lost. The next `docker-compose up` will run the full setup from scratch.
+</Warning>
+
+## Running bench commands inside the container
+
+To run `bench` commands (migrations, console, tests) inside the running container:
+
+```bash
+docker-compose exec frappe bash -c "cd frappe-bench && bench --site hrms.localhost <command>"
+```
+
+For example, to open a Frappe Python console:
+
+```bash
+docker-compose exec frappe bash -c "cd frappe-bench && bench --site hrms.localhost console"
+```

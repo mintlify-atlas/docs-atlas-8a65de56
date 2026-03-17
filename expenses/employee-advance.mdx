@@ -1,0 +1,139 @@
+---
+title: "Employee advances"
+description: "Issue cash advances to employees before they incur expenses, then reconcile them against expense claims."
+keywords: ["employee advance", "cash advance", "advance account", "repayment", "expense claim", "employee advance summary"]
+---
+
+# Employee advances
+
+An **Employee Advance** lets you pay an employee a cash amount before they incur expenses — for example, before a business trip. Once the employee returns and submits an **Expense Claim**, they link the advance to offset what the company owes them. Any unused balance can be returned or recovered from salary.
+
+## Prerequisites
+
+Before creating an **Employee Advance**, configure the following:
+
+- **Default Employee Advance Account** on the Company record (used when the advance is in company currency)
+- An **Advance Account** of type **Receivable** in the chart of accounts
+
+<Note>
+The **Advance Account** must be of account type **Receivable**. The account's currency must match the employee's salary currency.
+</Note>
+
+## Creating an employee advance
+
+Go to **HR > Expense Claims > Employee Advance > New**.
+
+### Document fields
+
+| Field | Description |
+|---|---|
+| **Employee** | The employee receiving the advance |
+| **Posting Date** | Date the advance is recorded |
+| **Department** | Auto-fetched from the employee record (read-only) |
+| **Purpose** | Description of why the advance is being issued (required) |
+| **Advance Amount** | The amount being requested |
+| **Currency** | Defaults to the employee's salary currency |
+| **Advance Account** | Ledger account to post the advance against (Receivable type) |
+| **Mode of Payment** | Optional — used when creating the payment Journal Entry |
+| **Repay Unclaimed Amount from Salary** | Check to automatically deduct any unclaimed balance in future salary runs |
+
+**Read-only computed fields**
+
+| Field | Description |
+|---|---|
+| **Paid Amount** | Amount actually paid against this advance (from Payment Ledger) |
+| **Claimed Amount** | Amount consumed via submitted, approved **Expense Claims** |
+| **Returned Amount** | Amount the employee has returned directly |
+| **Pending Amount** | Sum of unpaid advance amounts from earlier advances for this employee |
+
+## Advance request and payment
+
+<Steps>
+  <Step title="Create and submit the advance">
+    Fill in the required fields and click **Submit**. The advance status becomes **Unpaid** (submitted but not yet funded).
+  </Step>
+  <Step title="Create the payment Journal Entry">
+    From the submitted advance, click **Make > Journal Entry**. Frappe HR creates a Bank Entry that debits the **Advance Account** and credits the bank/cash account.
+  </Step>
+  <Step title="Submit the Journal Entry">
+    Submit the Journal Entry. Frappe HR updates **Paid Amount** and moves the advance status to **Paid**.
+  </Step>
+</Steps>
+
+<Tip>
+If **Make Payment via Journal Entry** is disabled in **Accounts Settings**, you can also fund the advance through a **Payment Entry** referencing the **Employee Advance** document.
+</Tip>
+
+## Reconciling against an expense claim
+
+When the employee submits an **Expense Claim** after the trip:
+
+<Steps>
+  <Step title="Open the Expense Claim">
+    Create a new **Expense Claim** for the employee.
+  </Step>
+  <Step title="Link the advance">
+    In the **Advance Payments** section, click **Get Advances** to fetch outstanding advances for that employee, or add the advance row manually.
+  </Step>
+  <Step title="Set the allocated amount">
+    Set **Allocated Amount** for each advance row. This cannot exceed the advance's unclaimed amount.
+  </Step>
+  <Step title="Submit the Expense Claim">
+    On submission, Frappe HR updates the **Claimed Amount** on the linked **Employee Advance** and adjusts its status.
+  </Step>
+</Steps>
+
+After reconciliation, the **Employee Advance** status reflects how much of the advance has been consumed:
+
+| Status | Meaning |
+|---|---|
+| **Draft** | Saved but not yet submitted |
+| **Unpaid** | Submitted; payment not yet made |
+| **Paid** | Fully funded; not yet claimed or returned |
+| **Claimed** | Claimed amount equals paid amount |
+| **Returned** | Full balance returned by the employee |
+| **Partly Claimed and Returned** | Partially claimed and the remainder returned |
+| **Cancelled** | Advance was cancelled |
+
+## Returning an unused advance
+
+If the employee does not spend the full advance, they can return the remainder.
+
+**Return via Journal Entry**
+
+From the submitted advance, click **Make > Return Entry**. Frappe HR creates a Journal Entry that credits the **Advance Account** and debits the bank/cash account for the return amount.
+
+**Return via salary deduction**
+
+Enable **Repay Unclaimed Amount from Salary** on the advance, or use **Make > Return via Additional Salary** to create an **Additional Salary** deduction entry that will reduce the employee's next salary slip.
+
+## Outstanding advance tracking
+
+The **Pending Amount** field on each new advance shows the cumulative unpaid balance from previous advances for the same employee as of the posting date. Use this to avoid double-funding.
+
+## Employee Advance Summary report
+
+Go to **HR > Reports > Employee Advance Summary** to view all advance records across employees.
+
+**Filters available**
+
+| Filter | Description |
+|---|---|
+| **Employee** | Narrow to a specific employee |
+| **Company** | Filter by company |
+| **Status** | Filter by advance status (Paid, Claimed, Returned, etc.) |
+| **From Date / To Date** | Filter by **Posting Date** range |
+
+**Report columns**
+
+| Column | Description |
+|---|---|
+| **Title** | Link to the **Employee Advance** document |
+| **Employee** | Employee ID |
+| **Company** | Company |
+| **Posting Date** | Date of the advance |
+| **Advance Amount** | Requested amount |
+| **Paid Amount** | Amount actually paid |
+| **Claimed Amount** | Amount consumed via expense claims |
+| **Returned Amount** | Amount returned by the employee |
+| **Status** | Current advance status |

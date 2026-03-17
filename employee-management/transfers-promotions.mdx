@@ -1,0 +1,106 @@
+---
+title: "Transfers and promotions"
+description: "Record employee transfers between departments or companies and promotions with revised designation and salary."
+keywords: ["employee transfer", "employee promotion", "department transfer", "promotion details", "work history", "CTC"]
+---
+
+Frappe HR provides two separate submittable documents to record internal mobility: **Employee Transfer** for department or company moves, and **Employee Promotion** for role and compensation changes.
+
+## Employee transfer
+
+An **Employee Transfer** records a move to a new department, designation, company, or any combination of employee properties, on a specific effective date.
+
+### Key fields
+
+| Field | Description |
+|---|---|
+| `employee` | The employee being transferred |
+| `transfer_date` | The effective date of the transfer |
+| `company` | The employee's current company (auto-fetched) |
+| `new_company` | The destination company, if the employee is moving to a different entity |
+| `department` | The employee's current department (read-only, auto-fetched) |
+| `transfer_details` | Table of property changes — each row specifies a field, current value, and new value |
+| `create_new_employee_id` | When checked, creates a new employee record for the destination and relieves the original |
+
+### Transfer details table
+
+The `transfer_details` table uses the **Employee Property History** child doctype. Each row records:
+- **Field name** — the employee field being changed (e.g. `department`, `designation`, `grade`)
+- **Current value** — automatically fetched from the employee record
+- **New value** — the value to apply on the transfer date
+
+### Submitting a transfer
+
+<Steps>
+  <Step title="Create the document">
+    Go to **HR > Employee Lifecycle > Employee Transfer** and click **New**. Select the **Employee** and set the **Transfer Date**.
+  </Step>
+  <Step title="Add transfer details">
+    In the **Employee Transfer Details** table, add a row for each property you want to change. For a simple department transfer, add one row with `fieldname = department` and set the new department in **New Value**.
+  </Step>
+  <Step title="Decide on employee ID">
+    If the employee is moving to a different legal entity (a different **New Company**), consider enabling **Create New Employee ID**. This creates a new employee record with the updated properties and marks the original employee as `Left` with a `relieving_date` equal to the transfer date.
+  </Step>
+  <Step title="Submit">
+    You cannot submit before the **Transfer Date** — Frappe HR blocks early submission with a `DocstatusTransitionError`. On the transfer date or after, submit the document. The employee record is updated immediately.
+  </Step>
+</Steps>
+
+<Note>
+If you enabled **Create New Employee ID** and later want to cancel the transfer, you must first delete the newly created employee record before cancellation is allowed.
+</Note>
+
+### Cross-company transfers
+
+When `new_company` differs from `company`:
+- The employee's `company` field is updated to `new_company`.
+- The `date_of_joining` on the employee record is reset to the `transfer_date`.
+- If **Create New Employee ID** is enabled, the new employee's `internal_work_history` is cleared so it starts fresh at the destination company.
+
+## Employee promotion
+
+An **Employee Promotion** records a change in role, grade, or compensation. You can change multiple employee properties at once and optionally record a revised CTC.
+
+### Key fields
+
+| Field | Description |
+|---|---|
+| `employee` | The employee being promoted |
+| `promotion_date` | The effective date of the promotion |
+| `promotion_details` | Table of property changes (same structure as transfer details) |
+| `current_ctc` | The employee's current cost-to-company (auto-fetched from the employee record) |
+| `revised_ctc` | The new CTC after promotion |
+
+### Submitting a promotion
+
+<Steps>
+  <Step title="Create the document">
+    Go to **HR > Employee Lifecycle > Employee Promotion** and click **New**. Select the **Employee** and set the **Promotion Date**.
+  </Step>
+  <Step title="Add promotion details">
+    In the **Employee Promotion Details** table, add a row for each property being updated — for example, `designation` for a title change or `grade` for a grade change.
+  </Step>
+  <Step title="Record salary change">
+    If the promotion includes a pay increase, enter the new amount in **Revised CTC**. **Current CTC** is auto-fetched from the employee record.
+  </Step>
+  <Step title="Submit">
+    Submission is blocked before the **Promotion Date**. After that date, submit the document. Frappe HR updates the employee record with all property changes and sets `ctc` to the revised value if provided.
+  </Step>
+</Steps>
+
+<Warning>
+Only active employees can be promoted. If the employee's status is not **Active**, Frappe HR raises a validation error when you save the document.
+</Warning>
+
+## How history is maintained
+
+Both transfers and promotions use the same `update_employee_work_history` utility function. On submission:
+
+- Each row in `transfer_details` or `promotion_details` is applied to the employee's field.
+- A corresponding entry is written to the employee's internal work history with the field name, old value, new value, and effective date.
+
+On cancellation, the function runs with `cancel=True`, which reverses each entry — restoring the prior values and removing the history rows.
+
+<Tip>
+You can view the full property history directly on the **Employee** form in the **Work History** section.
+</Tip>

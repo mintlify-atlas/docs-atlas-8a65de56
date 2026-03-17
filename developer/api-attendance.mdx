@@ -1,0 +1,187 @@
+---
+title: "Attendance API reference"
+description: "REST API for Employee Checkin (biometric and mobile) and Attendance records in Frappe HR"
+---
+
+## Employee Checkin
+
+Employee Checkin records an individual check-in or check-out event. The Frappe HR scheduler processes these events to mark attendance automatically (via **Shift Type → Auto Attendance**).
+
+This endpoint is used by the Frappe HR mobile app and can be called from biometric device integrations.
+
+### Create a checkin
+
+```
+POST /api/resource/Employee Checkin
+```
+
+<ParamField body="employee" type="string" required>
+  Employee ID (e.g. `EMP-00001`).
+</ParamField>
+
+<ParamField body="log_type" type="string" required>
+  Direction of the event. One of `IN` or `OUT`.
+</ParamField>
+
+<ParamField body="time" type="string" required>
+  Timestamp of the check-in in `YYYY-MM-DD HH:MM:SS` format.
+</ParamField>
+
+<ParamField body="device_id" type="string">
+  Identifier of the biometric device or mobile device that recorded the event. Used for auditing.
+</ParamField>
+
+<ParamField body="latitude" type="number">
+  GPS latitude at the time of check-in. Stored when geolocation tracking is enabled in **HR Settings**.
+</ParamField>
+
+<ParamField body="longitude" type="number">
+  GPS longitude at the time of check-in.
+</ParamField>
+
+<ParamField body="skip_auto_attendance" type="integer">
+  Set to `1` to prevent this checkin from triggering auto attendance processing. Default `0`.
+</ParamField>
+
+```bash
+curl -X POST "https://{your-site}/api/resource/Employee%20Checkin" \
+  -H "Authorization: token {api_key}:{api_secret}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "employee": "EMP-00001",
+    "log_type": "IN",
+    "time": "2024-04-01 09:02:00",
+    "device_id": "biometric-terminal-01",
+    "latitude": 12.9716,
+    "longitude": 77.5946
+  }'
+```
+
+---
+
+## Attendance
+
+### List attendance records
+
+```
+GET /api/resource/Attendance
+```
+
+<ParamField query="filters" type="array">
+  JSON array of filter triples. Common filters:
+  - `["employee", "=", "EMP-00001"]`
+  - `["attendance_date", ">=", "2024-04-01"]`
+  - `["attendance_date", "<=", "2024-04-30"]`
+  - `["status", "=", "Present"]` — values: `Present`, `Absent`, `Half Day`, `Work From Home`, `On Leave`
+  - `["docstatus", "=", 1]`
+</ParamField>
+
+<ParamField query="fields" type="array">
+  Key fields: `name`, `employee`, `employee_name`, `attendance_date`, `status`, `in_time`, `out_time`, `working_hours`, `shift`, `late_entry`, `early_exit`, `docstatus`.
+</ParamField>
+
+```bash
+curl -G "https://{your-site}/api/resource/Attendance" \
+  --data-urlencode 'filters=[["employee","=","EMP-00001"],["attendance_date",">=","2024-04-01"],["attendance_date","<=","2024-04-30"]]' \
+  --data-urlencode 'fields=["name","attendance_date","status","in_time","out_time","working_hours"]' \
+  -H "Authorization: token {api_key}:{api_secret}"
+```
+
+---
+
+### Create a manual attendance record
+
+Use this endpoint to mark attendance manually for an employee (for example, when auto attendance is not configured).
+
+```
+POST /api/resource/Attendance
+```
+
+<ParamField body="employee" type="string" required>
+  Employee ID.
+</ParamField>
+
+<ParamField body="attendance_date" type="string" required>
+  Date of attendance in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField body="status" type="string" required>
+  Attendance status. One of: `Present`, `Absent`, `Half Day`, `Work From Home`, `On Leave`.
+</ParamField>
+
+<ParamField body="company" type="string" required>
+  Company name.
+</ParamField>
+
+<ParamField body="shift" type="string">
+  Name of the Shift Type (e.g. `Morning Shift`). Required if the site uses shift-based attendance.
+</ParamField>
+
+<ParamField body="in_time" type="string">
+  Check-in time as a datetime string (`YYYY-MM-DD HH:MM:SS`).
+</ParamField>
+
+<ParamField body="out_time" type="string">
+  Check-out time as a datetime string.
+</ParamField>
+
+```bash
+curl -X POST "https://{your-site}/api/resource/Attendance" \
+  -H "Authorization: token {api_key}:{api_secret}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "employee": "EMP-00001",
+    "attendance_date": "2024-04-01",
+    "status": "Present",
+    "company": "Acme Corp"
+  }'
+```
+
+<Note>
+Creating an Attendance record via the API sets `docstatus` to `0` (Draft). Submit it using `frappe.client.submit` to make it official:
+
+```bash
+curl -X POST "https://{your-site}/api/method/frappe.client.submit" \
+  -H "Authorization: token {api_key}:{api_secret}" \
+  -H "Content-Type: application/json" \
+  -d '{"doc": {"doctype": "Attendance", "name": "HR-ATT-2024-00123"}}'
+```
+</Note>
+
+---
+
+## Attendance calendar (whitelisted method)
+
+The `hrms.api.get_attendance_calendar_events` method returns a date-keyed map of attendance status and holidays for the current session user. This is used by the Frappe HR mobile app's attendance calendar.
+
+```
+POST /api/method/hrms.api.get_attendance_calendar_events
+```
+
+<ParamField body="from_date" type="string" required>
+  Start date in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField body="to_date" type="string" required>
+  End date in `YYYY-MM-DD` format.
+</ParamField>
+
+```bash
+curl -X POST "https://{your-site}/api/method/hrms.api.get_attendance_calendar_events" \
+  -H "Authorization: token {api_key}:{api_secret}" \
+  -H "Content-Type: application/json" \
+  -d '{"from_date": "2024-04-01", "to_date": "2024-04-30"}'
+```
+
+Example response:
+
+```json
+{
+  "message": {
+    "2024-04-01": "Present",
+    "2024-04-06": "Holiday",
+    "2024-04-07": "Absent",
+    "2024-04-14": "Holiday"
+  }
+}
+```

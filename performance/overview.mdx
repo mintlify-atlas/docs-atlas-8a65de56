@@ -1,0 +1,71 @@
+---
+title: "Performance management"
+description: "Run structured appraisal cycles, track goals against KRAs, collect 360-degree feedback, and calculate final scores for every employee."
+keywords: ["performance management", "appraisal", "goals", "KRA", "feedback", "appraisal cycle"]
+---
+
+Frappe HR's performance management module covers the full appraisal lifecycle — from goal setting and peer feedback to final score calculation and salary revision. All activity is organized inside a time-boxed **Appraisal Cycle**, giving HR managers a single place to track progress across the organization.
+
+<CardGroup cols={2}>
+  <Card title="Goals" icon="bullseye" href="/performance/goals">
+    Create and track individual goals linked to Key Result Areas (KRAs)
+  </Card>
+  <Card title="Appraisal Cycle" icon="rotate" href="/performance/appraisal-cycle">
+    Set up a cycle, add appraisees, and bulk-create appraisals
+  </Card>
+  <Card title="Appraisal" icon="chart-bar" href="/performance/appraisal">
+    Score KRAs, capture self-appraisal, and compute the final score
+  </Card>
+  <Card title="Feedback" icon="comments" href="/performance/feedback">
+    Collect structured 360-degree feedback from peers and managers
+  </Card>
+</CardGroup>
+
+## How the appraisal cycle works
+
+The diagram below shows how each document relates to the others inside one cycle.
+
+```
+Appraisal Cycle
+  └── Appraisee list  (employees + their Appraisal Templates)
+        └── Appraisal  (one per employee)
+              ├── KRA vs Goals  (goal completion → goal score)
+              ├── Self Appraisal  (employee self-ratings)
+              └── Feedback  (reviewer ratings → avg feedback score)
+                        └── Final Score  (average of the three scores)
+```
+
+<Steps>
+  <Step title="Configure KRAs and templates">
+    Create **KRA** records that define the key result areas relevant to your business. Then build an **Appraisal Template** that maps KRAs to weightages and lists the rating criteria used for self-appraisal and feedback.
+  </Step>
+  <Step title="Create an Appraisal Cycle">
+    Open **Appraisal Cycle**, set the **Cycle Name**, **Start Date**, **End Date**, and pick a **KRA Evaluation Method** (automated from goal progress, or manual rating). Use **Get Employees** to populate the appraisee list, then click **Create Appraisals**.
+  </Step>
+  <Step title="Employees set goals">
+    Each employee creates **Goal** records linked to the cycle and a KRA. Goals can be nested — a parent goal rolls up progress from its children automatically.
+  </Step>
+  <Step title="Run appraisals">
+    HR or managers open each **Appraisal** document. Goal scores are calculated from linked goal progress. Employees complete the **Self Appraisal** tab. Reviewers submit **Employee Performance Feedback** documents.
+  </Step>
+  <Step title="Calculate and submit">
+    The **Final Score** on the appraisal is the average of the **Goal Score**, **Self Appraisal Score**, and **Average Feedback Score** (or a custom formula set on the cycle). Submit all appraisals, then click **Complete Cycle** on the **Appraisal Cycle**.
+  </Step>
+</Steps>
+
+## Score components
+
+| Component | Source | Field on Appraisal |
+|---|---|---|
+| Goal Score | Average goal completion across linked KRAs | `total_score` |
+| Self Appraisal Score | Weighted ratings from the employee | `self_score` |
+| Average Feedback Score | Average `total_score` of submitted feedback docs | `avg_feedback_score` |
+| **Final Score** | Average of the three above, or custom formula | `final_score` |
+
+<Tip>
+You can override the default averaging formula by enabling **Calculate Final Score based on Formula** on the **Appraisal Cycle** and entering a Python expression that references `goal_score`, `average_feedback_score`, and `self_appraisal_score`.
+</Tip>
+
+## Appraisal Overview report
+
+The **Appraisal Overview** report (HR module → Reports) shows every employee's goal score, self score, feedback score, and final score side by side. Filter by **Appraisal Cycle**, **Department**, **Designation**, or **Company** to narrow the view. The bar chart at the top visualizes the top 10 employees by final score.

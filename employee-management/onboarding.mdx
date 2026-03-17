@@ -1,0 +1,104 @@
+---
+title: "Onboarding"
+description: "Create onboarding checklists, track task completion, and automatically generate an employee record when all required activities are done."
+keywords: ["employee onboarding", "onboarding template", "onboarding activities", "boarding status", "frappe project"]
+---
+
+**Employee Onboarding** lets you define a checklist of activities for every new hire, assign tasks to specific users or roles, and track completion before the employee record is created.
+
+## Prerequisites
+
+Before you create an **Employee Onboarding** document, you need:
+
+- A submitted **Job Offer** linked to a **Job Applicant**
+- An **Employee Onboarding Template** (optional but recommended)
+- A **Holiday List** if the employee has not yet been created in the system
+
+## Setting up an onboarding template
+
+An **Employee Onboarding Template** defines the reusable set of activities for a given department, designation, or grade. You create it once and apply it to each new onboarding document.
+
+**To create a template:**
+
+<Steps>
+  <Step title="Open the template form">
+    Go to **HR > Employee Lifecycle > Employee Onboarding Template** and click **New**.
+  </Step>
+  <Step title="Fill in the header">
+    Enter a **Title**, and optionally select a **Company**, **Department**, **Designation**, and **Employee Grade**. These fields auto-populate matching fields on the onboarding document when you select this template.
+  </Step>
+  <Step title="Add activities">
+    In the **Activities** table, add one row per task. Each activity row has:
+
+    | Field | Description |
+    |---|---|
+    | `activity_name` | Name of the task (e.g. "Issue Laptop", "Complete IT Setup") |
+    | `user` | Specific user responsible (use either User or Role, not both) |
+    | `role` | Role responsible — all enabled users with this role will be assigned |
+    | `begin_on` | Days after `boarding_begins_on` when the task should start |
+    | `duration` | Duration of the task in days |
+    | `task_weight` | Numeric weight used to calculate project completion percentage |
+    | `required_for_employee_creation` | Check this to block employee record creation until this task is complete |
+    | `description` | Detailed instructions for the assignee |
+  </Step>
+  <Step title="Save">
+    Save the template. You can now select it on any **Employee Onboarding** document.
+  </Step>
+</Steps>
+
+## Creating an employee onboarding document
+
+<Steps>
+  <Step title="Open the form">
+    Go to **HR > Employee Lifecycle > Employee Onboarding** and click **New**.
+  </Step>
+  <Step title="Link the job applicant and job offer">
+    Select the **Job Applicant** and **Job Offer**. The employee name is fetched automatically from the job applicant. If an employee record already exists for this applicant, it is linked in the **Employee** field automatically.
+  </Step>
+  <Step title="Set dates and template">
+    - **Date of Joining** — the employee's official start date
+    - **Onboarding Begins On** — the date from which task start dates are calculated
+    - **Employee Onboarding Template** — selecting a template populates **Company**, **Department**, **Designation**, **Employee Grade**, and the **Activities** table
+    - **Holiday List** — required if the employee record does not yet exist, used to skip holidays when scheduling tasks
+  </Step>
+  <Step title="Review and adjust activities">
+    The **Onboarding Activities** table is copied from the template but you can add, remove, or adjust rows before submitting.
+  </Step>
+  <Step title="Submit">
+    Click **Submit**. Frappe HR creates a **Project** and a **Task** for each activity row. Tasks are scheduled based on `begin_on` and `duration`, with holiday skipping applied.
+
+    If **Notify users by email** is checked, each assignee receives an email notification when their task is created.
+  </Step>
+</Steps>
+
+<Note>
+Each job applicant can have only one active (non-cancelled) **Employee Onboarding** document. Creating a duplicate raises a validation error.
+</Note>
+
+## How boarding status is updated
+
+The `boarding_status` field on the **Employee Onboarding** document reflects the overall completion of the linked project:
+
+| Boarding status | Condition |
+|---|---|
+| `Pending` | No tasks have been started |
+| `In Process` | Project is between 0% and 100% complete |
+| `Completed` | Project reaches 100% complete |
+
+Frappe HR updates this field automatically whenever a task's status changes (via the `update_task` hook on **Task** save). You can also mark all tasks complete at once using the **Mark Onboarding as Completed** button, which sets every linked task and the project to `Completed`.
+
+## Creating the employee record
+
+Once the onboarding is submitted and mandatory tasks are complete, you can generate the employee record:
+
+1. Click the **Create Employee** button on the **Employee Onboarding** form.
+2. Frappe HR checks that every activity with **Required for Employee Creation** checked has its linked task in `Completed` or `Cancelled` status. If any required task is still open, an `IncompleteTaskError` is raised.
+3. A new **Employee** record is created, pre-populated with name, department, designation, grade, and personal email from the job applicant.
+
+<Tip>
+If you want to mark all activities as done in one step, use the **Mark Onboarding as Completed** button before creating the employee.
+</Tip>
+
+## Cancelling an onboarding
+
+Cancelling a submitted **Employee Onboarding** document deletes the linked project and all tasks. The `boarding_status` reverts to `Pending` and all `task` references on activity rows are cleared.

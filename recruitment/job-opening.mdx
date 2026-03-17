@@ -1,0 +1,131 @@
+---
+title: "Job openings"
+description: "Create and publish job openings for your organization"
+keywords: ["job opening", "vacancy", "staffing plan", "job requisition", "publish jobs", "website"]
+---
+
+A **Job Opening** represents an active position you are hiring for. It ties together the designation, department, staffing budget, and public-facing job description. Once published, candidates can apply directly from your website.
+
+## Job Opening fields
+
+| Field | Description |
+|---|---|
+| `job_title` | Display title of the position. Required. |
+| `designation` | Links to a **Designation** master. Required. Drives staffing plan validation. |
+| `department` | Department the position belongs to. |
+| `company` | Company hiring for this role. Required. |
+| `employment_type` | Full-time, part-time, contract, etc. |
+| `location` | Branch where the employee will be based. |
+| `status` | **Open** or **Closed**. Auto-set to **Closed** when `closes_on` passes. |
+| `posted_on` | Timestamp when the opening was created. Defaults to now. |
+| `closes_on` | Optional expiry date. When this date passes, the opening closes automatically overnight. |
+| `closed_on` | Date the opening was actually closed. Set automatically on status change. |
+| `description` | Full job profile, responsibilities, and qualifications. Rendered on the public job listing page. |
+| `lower_range` / `upper_range` | Salary band. Can be published publicly via **Publish Salary Range**. |
+| `salary_per` | Whether the salary range is per **Month** or per **Year**. |
+| `staffing_plan` | Read-only. Linked automatically when a matching active staffing plan exists. |
+| `planned_vacancies` | Read-only. Number of vacancies approved in the staffing plan. |
+| `job_requisition` | Read-only. The **Job Requisition** that originated this opening. |
+| `vacancies` | Fetched from the requisition. Number of positions to fill. |
+| `job_opening_template` | Optional template to pre-fill description and other fields. |
+
+## Using a Job Opening Template
+
+A **Job Opening Template** lets you save a reusable job description so you do not have to re-enter it for every opening.
+
+<Steps>
+  <Step title="Create the template">
+    Go to **HR → Recruitment → Job Opening Template** and click **New**. Enter a template name and fill in the **Description** with the standard job profile for that role.
+  </Step>
+  <Step title="Apply it to an opening">
+    On the **Job Opening** form, select the template in the **Job Opening Template** field. The description populates automatically. You can edit it before saving.
+  </Step>
+</Steps>
+
+## Staffing Plan integration
+
+When you save a **Job Opening**, Frappe HR checks for an active **Staffing Plan** that covers the opening's `designation` and `company` within the plan's date range.
+
+- If a matching plan is found, the `staffing_plan` and `planned_vacancies` fields are populated automatically.
+- Frappe HR counts existing employees in that designation plus other open job openings and compares that total to the `number_of_positions` in the staffing plan detail row.
+- If the count already meets or exceeds the planned positions, saving the opening raises a **Vacancies fulfilled** error.
+
+<Note>
+This check only applies when an active submitted **Staffing Plan** exists for the designation. You can still create openings without a staffing plan.
+</Note>
+
+### Setting up a Staffing Plan
+
+A **Staffing Plan** is a time-bounded hiring budget for a company (and optionally a department). It is a submittable document.
+
+<Steps>
+  <Step title="Create the plan">
+    Go to **HR → Recruitment → Staffing Plan** and click **New**. Enter a **Name**, **Company**, **From Date**, and **To Date**.
+  </Step>
+  <Step title="Add staffing details">
+    In the **Staffing Details** table, add one row per designation you are planning to hire for. Each row has:
+    - **Designation** — the role
+    - **Vacancies** — number of open positions to fill
+    - **Number of Positions** — total planned headcount (existing + new)
+    - **Current Count** — existing employee count (fetched automatically)
+    - **Estimated Cost Per Position** and **Total Estimated Cost**
+  </Step>
+  <Step title="Import from Job Requisitions">
+    Click **Get Job Requisitions** to auto-populate the details table from approved **Job Requisition** records for the same company.
+  </Step>
+  <Step title="Submit the plan">
+    Click **Submit** to activate the plan. Submitted plans drive validation on **Job Openings** and **Job Offers**.
+  </Step>
+</Steps>
+
+## Job Requisition → Job Opening flow
+
+A **Job Requisition** is the formal request to hire, raised by a department head and approved by HR.
+
+<Steps>
+  <Step title="Create a Job Requisition">
+    Go to **HR → Recruitment → Job Requisition** and click **New**. Fill in **Designation**, **No of Positions**, **Expected Compensation**, **Company**, and **Requested By**. Set the status to **Pending** and save.
+  </Step>
+  <Step title="Approve the requisition">
+    HR reviews the request and changes the status to **Open & Approved** (or **Rejected** or **On Hold**).
+  </Step>
+  <Step title="Create the Job Opening">
+    From the approved **Job Requisition**, click **Create Job Opening**. A new **Job Opening** is pre-filled with the designation, department, company, expected compensation, and job description. The `job_requisition` field on the opening is set automatically.
+  </Step>
+  <Step title="Requisition status syncs automatically">
+    When the linked **Job Opening** is closed, Frappe HR sets the **Job Requisition** status to **Filled** and records the **Completed On** date. The **Time to Fill** duration (from `posting_date` to `completed_on`) is calculated automatically.
+  </Step>
+</Steps>
+
+<Tip>
+You can also associate an existing **Job Opening** with a requisition using the **Associate Job Opening** button on the **Job Requisition** form.
+</Tip>
+
+## Publishing job openings on the website
+
+Frappe HR generates a public job listing page for each opening you publish.
+
+<Steps>
+  <Step title="Enable publishing">
+    On the **Job Opening** form, check **Publish on website**. A **Route** field appears, pre-filled as `jobs/{company}/{job-title}`. You can customise this path.
+  </Step>
+  <Step title="Optionally publish the salary range">
+    Check **Publish Salary Range** to display the `lower_range` and `upper_range` on the public page.
+  </Step>
+  <Step title="Show application count">
+    **Publish Applications Received** (enabled by default when publishing) displays the total number of applications received on the public listing page.
+  </Step>
+  <Step title="Custom application form">
+    To redirect applicants to a custom web form instead of the default application form, enter the form route in **Job Application Route**.
+  </Step>
+</Steps>
+
+All published openings are listed at the `/jobs` route on your Frappe site. The listing page is generated by the `Job Opening` web view.
+
+## Closing expired job openings automatically
+
+A scheduled daily task (`close_expired_job_openings`) runs overnight and sets the status of any **Open** job opening with a `closes_on` date in the past to **Closed**. You do not need to close expired openings manually.
+
+<Note>
+Once a **Job Opening** is closed, new **Job Applicant** records cannot be created against it. Attempting to do so raises a **Not Allowed** error.
+</Note>

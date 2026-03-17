@@ -1,0 +1,145 @@
+---
+title: "Recruitment analytics"
+description: "Use the Recruitment Analytics and Employee Exits reports in Frappe HR to track your hiring pipeline, measure time-to-hire, and manage offboarding."
+keywords: ["recruitment analytics", "employee exits", "hiring pipeline", "time to hire", "offer acceptance", "frappe hr"]
+---
+
+Frappe HR includes two reports for tracking the full employee lifecycle at its boundaries: hiring in and exiting out.
+
+## Recruitment Analytics
+
+The **Recruitment Analytics** report maps your complete hiring funnel — from Staffing Plan through Job Opening, Job Applicant, and Job Offer — in a single hierarchical view. Each row in the report is either a Job Opening or a Job Applicant nested beneath it.
+
+### Filters
+
+| Filter | Description |
+|---|---|
+| Company | Required |
+| On Date | Show staffing plans active on this date (the plan's `to_date` must be after this date) |
+
+### Columns
+
+| Column | Description |
+|---|---|
+| Staffing Plan | Link to the Staffing Plan that originated the opening |
+| Job Opening | Link to the Job Opening |
+| Job Applicant | Link to the Job Applicant record (indented under the Job Opening) |
+| Applicant Name | Full name of the applicant |
+| Application Status | Current status of the Job Applicant (Open, Replied, Rejected, Hold, Accepted) |
+| Job Offer | Link to the Job Offer issued to the applicant |
+| Designation | Designation on the Job Offer |
+| Offer Date | Date the Job Offer was created |
+| Job Offer Status | Current status of the Job Offer (Open, Accepted, Rejected) |
+
+### How to read the report
+
+The report uses an indented tree layout:
+
+1. The top-level row shows a **Staffing Plan** with its associated **Job Opening**.
+2. Nested beneath each Job Opening are all **Job Applicants** who applied for that opening.
+3. Where a Job Offer exists for an applicant, the offer details appear on the same row.
+
+This lets you see at a glance how many applicants each opening received, which applicants reached the offer stage, and the outcome of each offer.
+
+### Tracking conversion rates
+
+To calculate conversion rates manually from the exported data:
+
+- **Application-to-offer rate** = (rows with a non-empty Job Offer) ÷ (total applicant rows) × 100
+- **Offer acceptance rate** = (rows where Job Offer Status = Accepted) ÷ (rows with a Job Offer) × 100
+
+<Tip>
+Export to Excel and add a pivot table grouping by **Application Status** to see how many applicants are at each stage across all openings. This gives you a quick funnel view without needing a separate BI tool.
+</Tip>
+
+### Tracking time-to-hire
+
+The **Recruitment Analytics** report does not include a direct time-to-hire column, but you can derive it from exported data:
+
+1. Export the report to Excel.
+2. Open the **Job Opening** document for each row to find the opening's creation date.
+3. Subtract the opening's creation date from the **Offer Date** to get the time-to-hire for each successful applicant.
+
+Alternatively, use Frappe's **Query Report** builder to write a custom SQL report that joins Job Opening and Job Offer on `job_applicant` and computes the date difference directly.
+
+---
+
+## Employee Exits
+
+The **Employee Exits** report tracks every employee with a **Relieving Date** set on their record. It joins Exit Interview and Full and Final Statement data so you can see the offboarding status of each departing employee in one view.
+
+### Filters
+
+| Filter | Description |
+|---|---|
+| Company | Optional |
+| From Date / To Date | Filter by relieving date range |
+| Department | Optional |
+| Designation | Optional |
+| Employee | Optional; restrict to a single employee |
+| Reports To | Filter by manager |
+| Interview Status | Pending, Scheduled, Completed |
+| Final Decision | Employee Retained or Exit Confirmed |
+| Exit Interview Pending | Show only employees without a linked Exit Interview |
+| Questionnaire Pending | Show only employees whose exit questionnaire has not been submitted |
+| FnF Pending | Show only employees without a Full and Final Statement |
+
+### Columns
+
+| Column | Description |
+|---|---|
+| Employee | Employee ID |
+| Employee Name | Employee full name |
+| Date of Joining | Original joining date |
+| Relieving Date | The employee's last working day |
+| Exit Interview | Link to the Exit Interview document (blank if not yet created) |
+| Interview Status | Status of the Exit Interview |
+| Final Decision | Employee Retained or Exit Confirmed |
+| Full and Final Statement | Link to the FnF Settlement document |
+| Department | Employee's department |
+| Designation | Employee's designation |
+| Reports To | The employee's direct manager |
+
+### Report summary cards
+
+Above the grid, the report shows four summary cards:
+
+| Card | What it counts |
+|---|---|
+| Total Resignations | Total rows in the result set |
+| Pending Interviews | Employees with no Exit Interview document |
+| Pending FnF | Employees with no Full and Final Statement |
+| Pending Questionnaires | Employees whose exit questionnaire has not been filled |
+
+### Chart
+
+The report renders a donut chart with three segments: **Retained**, **Exit Confirmed**, and **Decision Pending** (where no final decision has been recorded yet).
+
+### Using the report for offboarding workflow
+
+<Steps>
+  <Step title="Identify pending actions">
+    Run the report with **Exit Interview Pending**, **Questionnaire Pending**, or **FnF Pending** enabled to see employees who still need action before their last day.
+  </Step>
+  <Step title="Prioritise by relieving date">
+    The report sorts rows by **Relieving Date** ascending by default, so the most urgent departures appear at the top.
+  </Step>
+  <Step title="Track final decisions">
+    After all exit interviews are completed, filter by **Final Decision: Exit Confirmed** to prepare a final headcount reduction report for leadership.
+  </Step>
+</Steps>
+
+<Note>
+The **Employee Exits** report includes employees from all companies by default when no Company filter is applied. Set the **Company** filter to restrict results when you operate multiple entities.
+</Note>
+
+---
+
+## Other reports useful for recruitment and exits
+
+| Report | Where to find it | Use case |
+|---|---|---|
+| **Employee Information** | HR → Reports | Full employee master data export; use before separation to archive the employee record |
+| **Appraisal Overview** | Performance → Reports | Check if a departing employee has a pending appraisal that should be closed |
+| **Unpaid Expense Claim** | HR → Reports | Identify outstanding expense claims to settle before full and final |
+| **Employee Advance Summary** | HR → Reports | Identify outstanding advances to recover before full and final |

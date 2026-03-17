@@ -1,0 +1,220 @@
+---
+title: "Leave API reference"
+description: "REST API endpoints for Leave Applications and Leave Allocations in Frappe HR"
+---
+
+## Leave Application
+
+### List leave applications
+
+```
+GET /api/resource/Leave Application
+```
+
+<ParamField query="filters" type="array">
+  JSON array of filter triples. Each triple is `[fieldname, operator, value]`. Common filters:
+  - `["employee", "=", "EMP-00001"]`
+  - `["status", "=", "Approved"]`
+  - `["leave_type", "=", "Casual Leave"]`
+  - `["from_date", ">=", "2024-01-01"]`
+  - `["docstatus", "=", 1]` (submitted records only)
+</ParamField>
+
+<ParamField query="fields" type="array">
+  JSON array of field names to return. Defaults to `["name"]`.
+  Key fields: `name`, `employee`, `employee_name`, `leave_type`, `from_date`, `to_date`, `total_leave_days`, `status`, `leave_approver`, `half_day`, `half_day_date`, `description`, `posting_date`, `docstatus`.
+</ParamField>
+
+<ParamField query="limit" type="integer">
+  Maximum number of records to return. Defaults to 20. Pass `limit=0` or a large number for more records.
+</ParamField>
+
+<ParamField query="order_by" type="string">
+  Sort expression, e.g. `posting_date desc`.
+</ParamField>
+
+```bash
+curl -G "https://{your-site}/api/resource/Leave%20Application" \
+  --data-urlencode 'filters=[["employee","=","EMP-00001"],["docstatus","=",1]]' \
+  --data-urlencode 'fields=["name","leave_type","from_date","to_date","total_leave_days","status"]' \
+  -H "Authorization: token {api_key}:{api_secret}"
+```
+
+---
+
+### Create a leave application
+
+```
+POST /api/resource/Leave Application
+```
+
+<ParamField body="employee" type="string" required>
+  Employee ID (e.g. `EMP-00001`).
+</ParamField>
+
+<ParamField body="leave_type" type="string" required>
+  Name of the Leave Type (e.g. `Casual Leave`, `Sick Leave`).
+</ParamField>
+
+<ParamField body="from_date" type="string" required>
+  Start date in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField body="to_date" type="string" required>
+  End date in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField body="half_day" type="integer">
+  Set to `1` for a half-day leave. Default `0`.
+</ParamField>
+
+<ParamField body="half_day_date" type="string">
+  Required when `half_day` is `1`. The specific date for the half day in `YYYY-MM-DD` format.
+</ParamField>
+
+<ParamField body="leave_approver" type="string">
+  Email of the leave approver user. If not supplied, defaults to the employee's configured approver.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Optional reason or description for the leave.
+</ParamField>
+
+```bash
+curl -X POST "https://{your-site}/api/resource/Leave%20Application" \
+  -H "Authorization: token {api_key}:{api_secret}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "employee": "EMP-00001",
+    "leave_type": "Casual Leave",
+    "from_date": "2024-04-01",
+    "to_date": "2024-04-03",
+    "half_day": 0,
+    "description": "Personal work"
+  }'
+```
+
+---
+
+### Get a single leave application
+
+```
+GET /api/resource/Leave Application/{name}
+```
+
+<ParamField path="name" type="string" required>
+  The document name (e.g. `HR-LAP-2024-00042`).
+</ParamField>
+
+```bash
+curl "https://{your-site}/api/resource/Leave%20Application/HR-LAP-2024-00042" \
+  -H "Authorization: token {api_key}:{api_secret}"
+```
+
+---
+
+### Update a leave application
+
+```
+PUT /api/resource/Leave Application/{name}
+```
+
+Only fields included in the request body are updated. You cannot update a submitted (`docstatus=1`) document with `PUT` — cancel it first.
+
+<ParamField path="name" type="string" required>
+  The document name.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Updated description.
+</ParamField>
+
+```bash
+curl -X PUT "https://{your-site}/api/resource/Leave%20Application/HR-LAP-2024-00042" \
+  -H "Authorization: token {api_key}:{api_secret}" \
+  -H "Content-Type: application/json" \
+  -d '{"description": "Updated reason"}'
+```
+
+---
+
+### Submit a leave application
+
+```
+POST /api/method/frappe.client.submit
+```
+
+<ParamField body="doc" type="object" required>
+  Object with `doctype` and `name` fields identifying the document to submit.
+</ParamField>
+
+```bash
+curl -X POST "https://{your-site}/api/method/frappe.client.submit" \
+  -H "Authorization: token {api_key}:{api_secret}" \
+  -H "Content-Type: application/json" \
+  -d '{"doc": {"doctype": "Leave Application", "name": "HR-LAP-2024-00042"}}'
+```
+
+---
+
+## Leave Allocation
+
+### List leave allocations
+
+```
+GET /api/resource/Leave Allocation
+```
+
+<ParamField query="filters" type="array">
+  JSON array of filter triples. Common filters:
+  - `["employee", "=", "EMP-00001"]`
+  - `["leave_type", "=", "Casual Leave"]`
+  - `["from_date", ">=", "2024-01-01"]`
+  - `["to_date", "<=", "2024-12-31"]`
+  - `["docstatus", "=", 1]`
+</ParamField>
+
+<ParamField query="fields" type="array">
+  Key fields: `name`, `employee`, `employee_name`, `leave_type`, `from_date`, `to_date`, `new_leaves_allocated`, `total_leaves_allocated`, `carry_forwarded_leaves`, `docstatus`.
+</ParamField>
+
+```bash
+curl -G "https://{your-site}/api/resource/Leave%20Allocation" \
+  --data-urlencode 'filters=[["employee","=","EMP-00001"],["leave_type","=","Casual Leave"],["docstatus","=",1]]' \
+  --data-urlencode 'fields=["name","leave_type","from_date","to_date","total_leaves_allocated"]' \
+  -H "Authorization: token {api_key}:{api_secret}"
+```
+
+---
+
+## Leave balance (whitelisted method)
+
+The `hrms.api.get_leave_balance_map` method returns the current employee's leave balances grouped by leave type.
+
+```
+POST /api/method/hrms.api.get_leave_balance_map
+```
+
+No parameters required. The method uses the session user to determine the employee.
+
+```bash
+curl -X POST "https://{your-site}/api/method/hrms.api.get_leave_balance_map" \
+  -H "Authorization: token {api_key}:{api_secret}"
+```
+
+Example response:
+
+```json
+{
+  "message": {
+    "Casual Leave": {
+      "allocated_leaves": 10.0,
+      "balance_leaves": 7.0
+    },
+    "Earned Leave": {
+      "allocated_leaves": 3.0,
+      "balance_leaves": 3.0
+    }
+  }
+}
+```

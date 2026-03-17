@@ -1,0 +1,139 @@
+---
+title: Attendance
+description: Mark daily attendance manually or automatically, correct records with attendance requests, and integrate with leave and holiday data.
+---
+
+An **Attendance** record (series `HR-ATT-YYYY-`) tracks whether an employee was present, absent, on leave, on a half day, or working from home on a specific date. Each record is per employee per date (with multiple records allowed for employees on multiple non-overlapping shifts).
+
+## Attendance statuses
+
+| Status | Meaning |
+|--------|---------|
+| **Present** | Employee was present for the full shift. |
+| **Absent** | Employee was absent without leave. |
+| **On Leave** | Employee is on an approved leave. |
+| **Half Day** | Employee was present for half the day. The **Status for Other Half** field records whether the other half was Present or Absent. |
+| **Work From Home** | Employee worked remotely. |
+
+## Marking attendance manually
+
+<Steps>
+  <Step title="Open Attendance">
+    Go to **HR > Attendance > Attendance > New**.
+  </Step>
+  <Step title="Fill in the details">
+    - **Employee** — select the employee
+    - **Attendance Date** — the date
+    - **Status** — select the attendance status
+    - **Shift** — optionally link to a **Shift Type**
+  </Step>
+  <Step title="Set leave details (for On Leave / Half Day)">
+    When status is **On Leave** or **Half Day**, the **Leave Type** field becomes mandatory. If an approved leave application exists for that date, the system fills this in automatically.
+  </Step>
+  <Step title="Submit">
+    Click **Submit**. Submitted attendance cannot be edited directly; cancel and amend to make corrections.
+  </Step>
+</Steps>
+
+### Bulk attendance marking
+
+For marking attendance for multiple dates at once, open an employee's profile and use the **Mark Attendance** button in the dashboard. You can select a date range, pick a status, and mark all unmarked days at once.
+
+## Attendance fields reference
+
+| Field | Description |
+|-------|-------------|
+| **Employee** | The employee. |
+| **Attendance Date** | The date of attendance. |
+| **Status** | Present, Absent, On Leave, Half Day, or Work From Home. |
+| **Leave Type** | Required when status is On Leave or Half Day. |
+| **Leave Application** | Link to the source leave application (read-only, auto-populated). |
+| **Shift** | The shift the employee was working during this attendance. |
+| **In Time** | Check-in timestamp (populated from Employee Checkin by auto-attendance). |
+| **Out Time** | Check-out timestamp (populated from Employee Checkin by auto-attendance). |
+| **Working Hours** | Calculated duration between In Time and Out Time. |
+| **Late Entry** | Checked when the employee checked in after the shift's late entry grace period. |
+| **Early Exit** | Checked when the employee checked out before the shift's early exit grace period. |
+| **Status for Other Half** | For Half Day records, indicates whether the other half was Present or Absent. |
+| **Attendance Request** | Link to the source attendance request (read-only, auto-populated). |
+
+## Employee Checkin
+
+**Employee Checkin** records individual clock-in and clock-out events captured from biometric devices, mobile apps, or manual entry. Auto-attendance processes these records to create **Attendance** documents.
+
+### Creating a checkin
+
+<Steps>
+  <Step title="Open Employee Checkin">
+    Go to **HR > Attendance > Employee Checkin > New**. (In practice, checkins are usually imported or pushed from a biometric device or mobile app.)
+  </Step>
+  <Step title="Fill in the fields">
+    - **Employee** — the employee
+    - **Time** — the exact timestamp of the checkin event (defaults to now)
+    - **Log Type** — `IN` or `OUT`. Leave blank if the shift type uses alternating entries.
+    - **Location / Device ID** — optional identifier for the device or location where the checkin occurred
+  </Step>
+  <Step title="Geolocation">
+    Click **Fetch Geolocation** to capture the GPS coordinates from the device. The **Latitude**, **Longitude**, and **Geolocation** fields are read-only after being captured.
+  </Step>
+</Steps>
+
+### Checkin fields reference
+
+| Field | Description |
+|-------|-------------|
+| **Employee** | The employee checking in. |
+| **Time** | Timestamp of the event. |
+| **Log Type** | `IN`, `OUT`, or blank (interpreted by the shift type setting). |
+| **Shift** | Auto-populated once the checkin is matched to a shift (read-only). |
+| **Location / Device ID** | Identifies the device or location. |
+| **Skip Auto Attendance** | When checked, this checkin is excluded from auto-attendance processing. |
+| **Attendance Marked** | Link to the attendance record created from this checkin (read-only). |
+| **Latitude / Longitude** | GPS coordinates (read-only after capture). |
+| **Geolocation** | Map-view of the location (read-only). |
+
+<Note>
+Checkin records where **Skip Auto Attendance** is checked are permanently excluded from auto-attendance even if **Last Sync of Checkin** is reset on the shift type.
+</Note>
+
+## Attendance Request
+
+An **Attendance Request** lets an employee correct or backfill attendance for dates that were marked incorrectly or not marked at all — for example, when they worked from home or were on duty at an external location.
+
+### Submitting an attendance request
+
+<Steps>
+  <Step title="Open Attendance Request">
+    Go to **HR > Attendance > Attendance Request > New**.
+  </Step>
+  <Step title="Fill in the details">
+    - **Employee** — the employee
+    - **From Date** and **To Date** — the date range to correct
+    - **Half Day** — check for a half-day correction; set **Half Day Date**
+    - **Reason** — `Work From Home` or `On Duty`
+    - **Explanation** — optional additional context
+    - **Shift** — optionally link a shift type (note: this will not overwrite the shift on existing attendance records)
+    - **Include Holidays** — check to also mark attendance on holidays within the date range
+  </Step>
+  <Step title="Submit">
+    Submitting creates or updates **Attendance** records for each date in the range with the appropriate status:
+    - **Work From Home** → status set to *Work From Home*
+    - **On Duty** → status set to *Present*
+  </Step>
+</Steps>
+
+## Holiday list integration
+
+Frappe HR skips attendance creation for holiday dates unless the relevant setting is explicitly enabled:
+
+- **Leave Application** — holidays within a leave period are excluded from **Total Leave Days** unless **Include holidays within leaves as leaves** is checked on the leave type.
+- **Auto-attendance** — attendance is not marked on holidays unless **Mark Auto Attendance on Holidays** is checked on the shift type.
+- **Attendance Request** — holidays are skipped unless **Include Holidays** is checked on the request.
+
+The holiday list used for an employee comes from:
+1. The **Holiday List** set on the **Shift Type** (if auto-attendance).
+2. Otherwise, the holiday list set on the employee record or their default company.
+
+## Monthly attendance sheet
+
+To see a summary of all employees' attendance for a month, go to **HR > Reports > Monthly Attendance Sheet**. The report shows daily status for each employee and highlights absences, leaves, and half days. You can filter by department, employee, or date range.

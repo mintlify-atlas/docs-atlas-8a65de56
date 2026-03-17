@@ -1,0 +1,71 @@
+---
+title: "Expense management"
+description: "Track, approve, and reimburse employee expenses — from advance requests to final payment."
+keywords: ["expense claim", "employee advance", "travel request", "reimbursement", "expense approver"]
+---
+
+# Expense management
+
+Frappe HR gives you a complete expense management workflow. Employees submit claims and advance requests, approvers review and sanction them, and finance pays out reimbursements — all linked to the accounting ledger.
+
+<CardGroup cols={2}>
+  <Card title="Expense claims" icon="receipt" href="/expenses/expense-claim">
+    Submit and approve employee expense claims, attach receipts, apply taxes, and record payment via Payment Entry or Journal Entry
+  </Card>
+  <Card title="Employee advances" icon="money-bill-transfer" href="/expenses/employee-advance">
+    Issue cash advances before travel or events, then settle them by linking to an Expense Claim or returning the unused amount
+  </Card>
+  <Card title="Travel requests" icon="plane" href="/expenses/travel-request">
+    Plan business trips with detailed itineraries and cost estimates before the journey begins
+  </Card>
+  <Card title="Reports" icon="chart-bar" href="/reports/overview">
+    Use the Employee Advance Summary and Unpaid Expense Claim reports to monitor outstanding balances
+  </Card>
+</CardGroup>
+
+## Expense lifecycle
+
+The typical expense lifecycle in Frappe HR moves through these stages:
+
+<Steps>
+  <Step title="Plan">
+    The employee creates a **Travel Request** before a business trip, listing the itinerary and estimated costs. Management can approve or reject the request.
+  </Step>
+  <Step title="Request an advance">
+    If the employee needs cash upfront, they create an **Employee Advance**. Once approved and paid, the advance status becomes **Paid**.
+  </Step>
+  <Step title="Incur expenses">
+    The employee spends money and collects receipts during the trip or event.
+  </Step>
+  <Step title="Submit an expense claim">
+    On return, the employee creates an **Expense Claim**, lists each expense line, attaches receipts, and links any outstanding **Employee Advance** to offset the amount owed.
+  </Step>
+  <Step title="Approval">
+    The designated **Expense Approver** reviews the claim. They can sanction the full claimed amount or a lower amount per line, then set **Approval Status** to **Approved** or **Rejected**.
+  </Step>
+  <Step title="Payment">
+    After submission, finance pays the outstanding balance via a **Payment Entry** or **Journal Entry**. The claim status moves to **Paid** once the full amount is reimbursed.
+  </Step>
+</Steps>
+
+## Key documents
+
+| Document | Purpose |
+|---|---|
+| **Expense Claim Type** | Defines expense categories (e.g. Travel, Meals) and maps each to a ledger account per company |
+| **Employee Advance** | Records a cash advance paid to an employee before expenses are incurred |
+| **Expense Claim** | The primary reimbursement request — lists individual expense lines and links to advances |
+| **Travel Request** | Pre-trip approval document with itinerary and cost estimates |
+
+## Roles
+
+| Role | Permissions |
+|---|---|
+| **Employee** | Create and submit their own expense claims and advance requests |
+| **Expense Approver** | Read, write, submit, cancel, and amend expense claims and advances |
+| **HR User** | Full access to expense claims for oversight |
+| **HR Manager** | Full access including deletion and approval-level fields |
+
+<Note>
+You can configure a **prevent self-approval** setting in **HR Settings** to stop employees from approving their own expense claims.
+</Note>

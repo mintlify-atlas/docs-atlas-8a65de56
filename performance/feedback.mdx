@@ -1,0 +1,114 @@
+---
+title: "Employee performance feedback"
+description: "Collect structured ratings and written comments from peers and managers as part of the appraisal cycle."
+keywords: ["performance feedback", "360-degree feedback", "feedback criteria", "reviewer", "feedback ratings", "appraisal feedback"]
+---
+
+An **Employee Performance Feedback** document captures a structured review of an employee from any other employee — a peer, a manager, or a skip-level. Multiple feedback documents can be submitted for the same appraisal; their scores are averaged and fed into the **Final Score**.
+
+## Feedback Criteria configuration
+
+**Employee Feedback Criteria** are the dimensions on which employees are rated. Create them once and reuse them across appraisal templates.
+
+<Steps>
+  <Step title="Open Employee Feedback Criteria">
+    Go to **HR** → **Performance** → **Employee Feedback Criteria** and click **New**.
+  </Step>
+  <Step title="Enter the criteria name">
+    Enter a unique **Criteria** name (for example, `Communication`, `Technical Skills`, or `Ownership`). This name is the document's unique identifier.
+  </Step>
+  <Step title="Save">
+    Click **Save**. The criteria is now available for selection in **Appraisal Template** rating criteria rows.
+  </Step>
+</Steps>
+
+<Note>
+Only **HR Manager**, **HR User**, and **System Manager** roles can create or modify feedback criteria.
+</Note>
+
+## Employee Performance Feedback fields
+
+### Employee Details tab
+
+| Field | Description |
+|---|---|
+| **For Employee** (`employee`) | The employee being reviewed. Required. |
+| **Employee Name** | Fetched from the employee record. Read-only. |
+| **Department** / **Designation** | Fetched from the employee record. Read-only. |
+| **Company** | Fetched from the employee record. Read-only. |
+| **Reviewer** | The employee submitting this feedback. Required. Cannot be the same as **For Employee**. |
+| **Reviewer Name** / **Reviewer Designation** | Fetched from the reviewer record. Read-only. |
+| **Added On** | Date and time the feedback was created. Defaults to now. |
+| **Appraisal Cycle** | Fetched automatically from the linked **Appraisal**. Read-only. |
+| **Appraisal** | The appraisal this feedback is linked to. Required. Must belong to the same employee. |
+| **Feedback Ratings** | Child table of criteria and star ratings. Weightages must total 100. |
+| **Total Score** | Weighted average of all ratings. Read-only. Calculated as `Σ (rating × 5 × per_weightage / 100)`. |
+
+### Feedback tab
+
+| Field | Description |
+|---|---|
+| **Feedback** (`feedback`) | Free-text editor for written comments. Required. |
+
+## Submitting feedback
+
+<Steps>
+  <Step title="Open Employee Performance Feedback">
+    Go to **HR** → **Performance** → **Employee Performance Feedback** and click **New**.
+  </Step>
+  <Step title="Select the employee and appraisal">
+    Choose the **For Employee** and the **Appraisal** you are reviewing. The **Appraisal Cycle** populates automatically from the appraisal.
+  </Step>
+  <Step title="Set the reviewer">
+    The **Reviewer** defaults to the logged-in user's employee record. Change it if you are entering feedback on behalf of someone else.
+  </Step>
+  <Step title="Load feedback criteria">
+    Click **Get Feedback Criteria** to populate the **Feedback Ratings** table from the appraisal's template. Each row shows a **Criteria** and its **Weightage (%)**.
+  </Step>
+  <Step title="Enter ratings">
+    For each row in the **Feedback Ratings** table, enter a **Rating** from 0 to 1 (displayed as stars, scaled to 5 in the score). The **Total Score** updates as you type.
+  </Step>
+  <Step title="Write the feedback">
+    Switch to the **Feedback** tab and enter detailed written comments in the **Feedback** field. This is required.
+  </Step>
+  <Step title="Submit">
+    Click **Submit**. On submission, the **Average Feedback Score** on the linked appraisal is recalculated immediately.
+  </Step>
+</Steps>
+
+<Warning>
+An employee cannot submit feedback for themselves. Frappe HR blocks the submission if **Reviewer** equals **For Employee**. Use the **Self Appraisal** tab on the **Appraisal** document instead.
+</Warning>
+
+## How feedback scores affect the appraisal
+
+When a feedback document is submitted or cancelled, Frappe HR recalculates the **Average Feedback Score** on the linked appraisal:
+
+```
+Avg Feedback Score = average(total_score) across all submitted feedback docs for this appraisal
+```
+
+The **Final Score** on the appraisal is then updated to reflect the new average.
+
+## Viewing feedback history
+
+Open the **Appraisal** document and go to the **Feedback** tab. The feedback panel shows:
+
+- Each submitted feedback entry with the reviewer's name, designation, date, and total score.
+- A rating distribution chart showing what percentage of reviews fell into each star band (1–5).
+- The overall **Average Feedback Score**.
+
+You can also go to **HR** → **Performance** → **Employee Performance Feedback** and filter by **For Employee** or **Appraisal Cycle** to list all feedback documents for a given cycle.
+
+## Feedback permissions
+
+| Role | Permissions |
+|---|---|
+| System Manager | Full access (create, read, write, submit, cancel, amend, delete) |
+| HR Manager | Full access |
+| Employee | Create, read, write, submit, cancel (own feedback given) |
+| HR User | Read only |
+
+<Tip>
+Encourage reviewers to submit feedback before the cycle ends. You can track employees with no feedback submitted using the **Appraisal Cycle** summary, which shows a **Feedback Missing** count on the cycle dashboard.
+</Tip>

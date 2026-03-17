@@ -1,0 +1,168 @@
+---
+title: "Testing"
+description: "Run Frappe HR's test suite, write new tests, and understand the test infrastructure"
+---
+
+## Test infrastructure
+
+### `before_tests` hook
+
+Frappe HR registers a `before_tests` hook in `hooks.py`:
+
+```python
+before_tests = "hrms.tests.test_utils.before_tests"
+```
+
+Frappe runs this function once before the test suite. `before_tests` in `hrms/tests/test_utils.py`:
+
+1. Runs the setup wizard if no company exists yet (creates `_Test Company` with `INR` currency and India locale)
+2. Calls `enable_all_roles_and_domains()` so all role permissions are active during tests
+3. Creates a default holiday list and attaches it to `_Test Company`
+4. Commits the setup to the database
+
+This ensures every test starts from a consistent baseline without needing to set up company and master data in each test file.
+
+## Running the full test suite
+
+```bash
+bench --site {your-site} run-tests --app hrms
+```
+
+Replace `{your-site}` with your site name (e.g. `hrms.localhost`).
+
+<Tip>
+If you are using the Docker setup, run bench commands inside the container:
+
+```bash
+docker-compose exec frappe bash -c "cd frappe-bench && bench --site hrms.localhost run-tests --app hrms"
+```
+</Tip>
+
+## Running a specific test module
+
+```bash
+bench --site {your-site} run-tests --module hrms.hr.doctype.leave_application.test_leave_application
+```
+
+Pass the full Python module path to `--module`. The path mirrors the file system structure under `hrms/`.
+
+## Test file locations
+
+Test files mirror the DocType directory structure:
+
+```
+hrms/
+  hr/
+    doctype/
+      leave_application/
+        test_leave_application.py     # Tests for Leave Application
+      attendance/
+        test_attendance.py
+      shift_type/
+        test_shift_type.py
+  payroll/
+    doctype/
+      salary_slip/
+        test_salary_slip.py
+      payroll_entry/
+        test_payroll_entry.py
+  controllers/
+    tests/
+      test_employee_reminders.py
+  tests/
+    test_utils.py   # Shared fixtures and before_tests
+    utils.py        # HRMSTestSuite base class
+```
+
+Naming convention: `test_{doctype_snake_case}.py` inside the doctype directory.
+
+## Writing a new test
+
+### Extend `HRMSTestSuite` (or `unittest.TestCase`)
+
+For tests that need shared records (employees, departments, leave types), extend `HRMSTestSuite` from `hrms.tests.utils`:
+
+```python
+# hrms/hr/doctype/my_doctype/test_my_doctype.py
+import frappe
+from hrms.tests.utils import HRMSTestSuite
+
+
+class TestMyDoctype(HRMSTestSuite):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.make_employees()     # creates _T-Employee-00001, etc.
+        cls.make_departments()
+        cls.make_leave_types()
+
+    def test_my_feature(self):
+        # Arrange
+        employee = "_T-Employee-00001"
+
+        # Act
+        doc = frappe.get_doc({
+            "doctype": "My Doctype",
+            "employee": employee,
+        }).insert()
+
+        # Assert
+        self.assertEqual(doc.employee, employee)
+```
+
+### Use `make_employee` for quick employee creation
+
+For simpler tests that do not need the full test suite, import `make_employee` directly:
+
+```python
+import unittest
+import frappe
+from erpnext.setup.doctype.employee.test_employee import make_employee
+
+
+class TestLeaveCalculation(unittest.TestCase):
+    def setUp(self):
+        self.employee = make_employee("test.worker@example.com", company="_Test Company")
+
+    def test_leave_balance_after_allocation(self):
+        # create an allocation, then check the balance
+        allocation = frappe.get_doc({
+            "doctype": "Leave Allocation",
+            "employee": self.employee,
+            "leave_type": "_Test Leave Type",
+            "from_date": "2024-01-01",
+            "to_date": "2024-12-31",
+            "new_leaves_allocated": 10,
+        })
+        allocation.insert()
+        allocation.submit()
+
+        # your assertions here
+        self.assertEqual(allocation.total_leaves_allocated, 10)
+```
+
+### Shared test utilities in `hrms/tests/test_utils.py`
+
+| Function | Purpose |
+|---|---|
+| `before_tests()` | Framework hook; runs once before the suite |
+| `get_first_sunday(holiday_list, for_date)` | Returns the first Sunday in a given month from a holiday list |
+| `create_company(name, is_group, parent_company)` | Creates a Company record (idempotent) |
+| `create_department(name, company)` | Creates a Department record (idempotent) |
+| `create_employee_grade(grade, default_structure, default_base)` | Creates an Employee Grade (idempotent) |
+| `create_job_applicant(**args)` | Creates a Job Applicant for recruitment tests |
+| `add_date_to_holiday_list(date, holiday_list)` | Adds a holiday date to an existing Holiday List |
+
+## CI/CD
+
+Frappe HR runs its test suite on every pull request and push to `develop` using **GitHub Actions**. The workflow is defined in `.github/workflows/ci.yml`. Coverage reports are uploaded to [Codecov](https://codecov.io/gh/frappe/hrms).
+
+You can see the current CI status at the top of the [README](https://github.com/frappe/hrms):
+
+```
+[![CI](https://github.com/frappe/hrms/actions/workflows/ci.yml/badge.svg?branch=develop)]
+```
+
+<Note>
+All tests must pass in CI before a pull request can be merged. If your changes break an existing test, fix the test (or the code) before requesting review.
+</Note>

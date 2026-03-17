@@ -1,0 +1,72 @@
+---
+title: Payroll overview
+description: End-to-end payroll processing in Frappe HR — from salary structures to payment journal entries.
+keywords: [payroll, salary, hrms, frappe hr, payroll cycle]
+---
+
+Frappe HR handles the complete payroll cycle: define how employees are paid, run payroll in bulk, generate salary slips, compute income tax, and post accounting entries — all within a single workflow.
+
+<CardGroup cols={2}>
+  <Card title="Salary components" icon="tag" href="/payroll/salary-components">
+    Define earning and deduction components with flat amounts or Python formulas
+  </Card>
+  <Card title="Salary structures" icon="file-text" href="/payroll/salary-structure">
+    Build pay structures from components and assign them to employees
+  </Card>
+  <Card title="Payroll entry" icon="play" href="/payroll/payroll-entry">
+    Run payroll in bulk, generate salary slips, and post journal entries
+  </Card>
+  <Card title="Salary slips" icon="receipt" href="/payroll/salary-slip">
+    View, edit, and email individual salary slips to employees
+  </Card>
+  <Card title="Additional salary" icon="plus-circle" href="/payroll/additional-salary">
+    One-time or recurring additions and deductions outside the salary structure
+  </Card>
+  <Card title="Income tax" icon="landmark" href="/payroll/income-tax">
+    Configure tax slabs, exemptions, and automatic tax withholding
+  </Card>
+  <Card title="Gratuity" icon="hand-coins" href="/payroll/gratuity">
+    Calculate and disburse end-of-service gratuity using configurable rules
+  </Card>
+</CardGroup>
+
+## The payroll cycle
+
+Each payroll run follows the same end-to-end sequence:
+
+<Steps>
+  <Step title="Set up salary components">
+    Create **Salary Components** for each earning (Basic, HRA, Allowances) and deduction (Provident Fund, Income Tax). Components can carry a fixed amount or a Python formula evaluated at runtime.
+  </Step>
+  <Step title="Define salary structures">
+    Assemble components into a **Salary Structure**. Each structure is scoped to a company and currency and specifies the payroll frequency (Monthly, Weekly, etc.).
+  </Step>
+  <Step title="Assign structures to employees">
+    Create a **Salary Structure Assignment** linking an employee to a structure with an effective **From Date** and a **Base** salary amount. The assignment also specifies the **Income Tax Slab** for the employee.
+  </Step>
+  <Step title="Create a payroll entry">
+    Open a **Payroll Entry** for the period, filter eligible employees, then use **Get Employees** to populate the employee list. Submit the entry to trigger bulk salary slip creation.
+  </Step>
+  <Step title="Review and submit salary slips">
+    Review any generated **Salary Slips** before bulk-submitting them. During submission, an accrual journal entry is automatically posted to the configured **Payroll Payable Account**.
+  </Step>
+  <Step title="Create the bank payment entry">
+    After slip submission, use **Make Bank Entry** on the payroll entry to create a bank journal entry that clears the payroll payable account.
+  </Step>
+</Steps>
+
+## Key concepts
+
+| Concept | Description |
+|---|---|
+| **Salary Component** | An individual earning or deduction item with an optional formula |
+| **Salary Structure** | A template that groups components for a given company and frequency |
+| **Salary Structure Assignment** | Links an employee to a structure with a base salary and effective date |
+| **Payroll Period** | A date range (usually a fiscal year) used for income tax computation |
+| **Income Tax Slab** | Tax rate brackets applied against an employee's annual taxable income |
+| **Additional Salary** | A one-time or recurring adjustment outside the regular structure |
+| **Gratuity** | End-of-service benefit calculated from years of service |
+
+<Note>
+Frappe HR requires ERPNext for accounting. Ensure your **Payroll Payable Account** and salary component accounts are configured before your first payroll run.
+</Note>

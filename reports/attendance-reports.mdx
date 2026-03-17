@@ -1,0 +1,193 @@
+---
+title: "Attendance reports"
+description: "Run and interpret the built-in attendance reports in Frappe HR: Monthly Attendance Sheet, Shift Attendance, Employees Working on a Holiday, and Employee Analytics."
+keywords: ["attendance", "monthly attendance sheet", "shift attendance", "holiday", "employee analytics", "frappe hr reports"]
+---
+
+Frappe HR includes four key attendance reports. Each report reads from submitted **Attendance** records, so make sure attendance has been marked and submitted before running them.
+
+## Monthly Attendance Sheet
+
+The **Monthly Attendance Sheet** gives you a day-by-day attendance grid for every employee in a company or department. Use it for payroll verification, leave reconciliation, and monthly HR reviews.
+
+### Filters
+
+| Filter | Required | Description |
+|---|---|---|
+| Filter Based On | Yes | Choose **Month** (select year and month) or **Date Range** (up to 90 days) |
+| Company | Yes | The company whose employees to include |
+| Include Company Descendants | No | Extend the query to all child companies |
+| Month / Year | When filter is Month | Calendar month and year |
+| Start Date / End Date | When filter is Date Range | Must be within 90 days of each other |
+| Department | No | Restrict to a single department |
+| Employee | No | Restrict to a single employee |
+| Group By | No | Group rows by Branch, Grade, Department, or Designation |
+| Summarized View | No | Toggle between detailed daily grid and summary totals |
+
+### Columns — detailed view
+
+The default detailed view shows one row per employee per shift, with a column for every day in the period. Each cell contains an abbreviation:
+
+| Abbreviation | Status |
+|---|---|
+| P | Present |
+| A | Absent |
+| L | On Leave |
+| H | Holiday |
+| WO | Weekly Off |
+| WFH | Work From Home |
+| HD/P | Half Day — other half Present |
+| HD/A | Half Day — other half Absent |
+
+A legend at the bottom of the report maps each abbreviation to its full status name.
+
+### Columns — summarized view
+
+When you enable **Summarized View**, the daily grid is replaced by aggregate columns:
+
+- **Total Present** — sum of present and half-day present days
+- **Total Leaves** — sum of leave and half-day leave days
+- **Total Absent**
+- **Total Holidays** — holidays and weekly offs not covered by attendance
+- **Unmarked Days** — days with no attendance record and no holiday
+- One column per leave type (e.g., Sick Leave, Casual Leave) showing days taken
+- **Total Late Entries**
+- **Total Early Exits**
+
+### Chart
+
+The report renders a line chart showing daily totals for Absent, Present, and Leave across the selected period.
+
+<Tip>
+Use **Summarized View** with **Group By: Department** to quickly compare department-level attendance across a month.
+</Tip>
+
+---
+
+## Shift Attendance
+
+The **Shift Attendance** report provides a row-per-attendance-record view that includes check-in and check-out timestamps, shift boundaries, and late entry/early exit durations. It is most useful when you run multiple shifts and need to audit punctuality.
+
+### Filters
+
+| Filter | Description |
+|---|---|
+| From Date / To Date | Date range for attendance records |
+| Company | Restricts to employees of the selected company |
+| Department | Optional department filter |
+| Shift | Optional shift type filter |
+| Late Entry | Show only records where the employee checked in late |
+| Early Exit | Show only records where the employee checked out early |
+| Consider Grace Period | Apply the grace period defined on the Shift Type before marking an entry as late or exit as early |
+| Include Attendance Without Checkins | Include attendance records that have no linked Employee Checkin |
+
+### Columns
+
+| Column | Description |
+|---|---|
+| Employee | Employee ID |
+| Shift | Shift Type linked to the attendance record |
+| Attendance Date | Date of the attendance record |
+| Status | Present, Half Day, or Absent |
+| Shift Start Time | Scheduled start of the shift |
+| Shift End Time | Scheduled end of the shift |
+| In Time | Actual employee check-in time |
+| Out Time | Actual employee check-out time |
+| Total Working Hours | Hours worked, formatted to configured float precision |
+| Late Entry By | Duration the employee was late (blank if on time) |
+| Early Exit By | Duration the employee left early (blank if on time) |
+| Department | Employee's department |
+| Company | Employee's company |
+| Shift Actual Start Time | Adjusted shift start based on Employee Checkin |
+| Shift Actual End Time | Adjusted shift end based on Employee Checkin |
+| Attendance ID | Link to the underlying Attendance document |
+
+### Report summary
+
+Above the grid, the report shows five summary cards: **Present Records**, **Half Day Records**, **Absent Records**, **Late Entries**, and **Early Exits**.
+
+<Note>
+The Shift Attendance report only includes attendance records linked to a Shift Type. Employees without a shift assignment do not appear unless **Include Attendance Without Checkins** is enabled.
+</Note>
+
+---
+
+## Employees Working on a Holiday
+
+The **Employees Working on a Holiday** report lists every attendance record where an employee was marked Present, Half Day, or Work From Home on a date that falls in their holiday list.
+
+### Filters
+
+| Filter | Description |
+|---|---|
+| Company | Required |
+| Department | Optional |
+| Holiday List | Optional; restrict to a specific holiday list |
+| From Date / To Date | Date range to search |
+
+### Columns
+
+| Column | Description |
+|---|---|
+| Employee | Employee ID |
+| Date | Date the employee worked |
+| Status | Attendance status on that date (Present, Half Day, WFH) |
+| Holiday | Description of the holiday from the Holiday List |
+
+<Tip>
+Export this report to Excel and give it to your payroll team. Use it to identify employees eligible for compensatory leave or overtime pay.
+</Tip>
+
+---
+
+## Employee Analytics
+
+The **Employee Analytics** report gives you a headcount breakdown of active employees across a chosen dimension. It renders as a donut chart alongside a tabular list of employees.
+
+### Filters
+
+| Filter | Description |
+|---|---|
+| Company | Required |
+| Parameter | The dimension to analyse: Branch, Department, Designation, Grade, or Gender |
+
+### Columns
+
+| Column | Description |
+|---|---|
+| Employee | Employee ID |
+| Name | Employee full name |
+| Date of Birth | Employee date of birth |
+| Branch | Assigned branch |
+| Department | Assigned department |
+| Designation | Job designation |
+| Gender | Gender |
+| Company | Company |
+
+The donut chart plots each parameter value as a segment, with a final "Not Set" segment for employees who have no value set for the selected parameter.
+
+<Note>
+Employee Analytics only counts employees with **Status: Active**. Employees on notice or relieved are excluded.
+</Note>
+
+---
+
+## Exporting attendance reports
+
+All attendance reports support export from the Frappe desk report view:
+
+<Steps>
+  <Step title="Run the report">
+    Open the report, set your filters, and click **Run** (or press `Enter`).
+  </Step>
+  <Step title="Open the export menu">
+    Click the **⋮** icon in the top-right corner of the results grid.
+  </Step>
+  <Step title="Choose a format">
+    Select **Export** → **Excel** for a `.xlsx` file, or **PDF** for a print-ready document. The PDF uses the report's HTML template and respects your filter labels as a header.
+  </Step>
+</Steps>
+
+<Tip>
+To share a filtered report view with a colleague, copy the browser URL after running the report. Frappe encodes the active filters in the URL, so the recipient sees the same filtered output when they open the link.
+</Tip>

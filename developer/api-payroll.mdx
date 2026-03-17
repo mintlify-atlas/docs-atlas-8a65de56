@@ -1,0 +1,187 @@
+---
+title: "Payroll API reference"
+description: "REST API for Salary Slips and Payroll Entries in Frappe HR"
+---
+
+## Salary Slip
+
+### List salary slips
+
+```
+GET /api/resource/Salary Slip
+```
+
+<ParamField query="filters" type="array">
+  JSON array of filter triples. Common filters:
+  - `["employee", "=", "EMP-00001"]`
+  - `["start_date", ">=", "2024-04-01"]`
+  - `["end_date", "<=", "2024-04-30"]`
+  - `["month", "=", "April"]` (human-readable month name stored on the document)
+  - `["fiscal_year", "=", "2023-2024"]`
+  - `["docstatus", "=", 1]` (submitted slips only)
+</ParamField>
+
+<ParamField query="fields" type="array">
+  Key fields: `name`, `employee`, `employee_name`, `start_date`, `end_date`, `gross_pay`, `total_deduction`, `net_pay`, `rounded_total`, `currency`, `company`, `payroll_entry`, `docstatus`.
+</ParamField>
+
+```bash
+curl -G "https://{your-site}/api/resource/Salary%20Slip" \
+  --data-urlencode 'filters=[["employee","=","EMP-00001"],["start_date",">=","2024-04-01"],["docstatus","=",1]]' \
+  --data-urlencode 'fields=["name","start_date","end_date","gross_pay","total_deduction","net_pay","currency"]' \
+  -H "Authorization: token {api_key}:{api_secret}"
+```
+
+---
+
+### Get a single salary slip
+
+```
+GET /api/resource/Salary Slip/{name}
+```
+
+<ParamField path="name" type="string" required>
+  Salary slip document name (e.g. `Sal Slip/EMP-00001/00001`).
+</ParamField>
+
+The response includes the full document with child table rows for `earnings` and `deductions`.
+
+<ResponseField name="name" type="string">
+  Document name.
+</ResponseField>
+
+<ResponseField name="employee" type="string">
+  Employee ID.
+</ResponseField>
+
+<ResponseField name="employee_name" type="string">
+  Employee full name.
+</ResponseField>
+
+<ResponseField name="start_date" type="string">
+  Pay period start date (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="end_date" type="string">
+  Pay period end date (`YYYY-MM-DD`).
+</ResponseField>
+
+<ResponseField name="gross_pay" type="number">
+  Total earnings before deductions.
+</ResponseField>
+
+<ResponseField name="total_deduction" type="number">
+  Sum of all deductions.
+</ResponseField>
+
+<ResponseField name="net_pay" type="number">
+  `gross_pay` minus `total_deduction`.
+</ResponseField>
+
+<ResponseField name="rounded_total" type="number">
+  Net pay rounded to the nearest integer (as configured in HR Settings).
+</ResponseField>
+
+<ResponseField name="earnings" type="array">
+  List of earning components. Each entry has `salary_component`, `amount`, `year_to_date`.
+</ResponseField>
+
+<ResponseField name="deductions" type="array">
+  List of deduction components. Each entry has `salary_component`, `amount`, `year_to_date`.
+</ResponseField>
+
+```bash
+curl "https://{your-site}/api/resource/Salary%20Slip/Sal%20Slip%2FEMP-00001%2F00001" \
+  -H "Authorization: token {api_key}:{api_secret}"
+```
+
+---
+
+## Payroll Entry
+
+### List payroll entries
+
+```
+GET /api/resource/Payroll Entry
+```
+
+<ParamField query="filters" type="array">
+  Common filters:
+  - `["company", "=", "Acme Corp"]`
+  - `["start_date", ">=", "2024-04-01"]`
+  - `["end_date", "<=", "2024-04-30"]`
+  - `["payroll_frequency", "=", "Monthly"]`
+  - `["docstatus", "=", 1]`
+</ParamField>
+
+<ParamField query="fields" type="array">
+  Key fields: `name`, `company`, `start_date`, `end_date`, `payroll_frequency`, `total_employees`, `status`, `docstatus`.
+</ParamField>
+
+```bash
+curl -G "https://{your-site}/api/resource/Payroll%20Entry" \
+  --data-urlencode 'filters=[["company","=","Acme Corp"],["start_date",">=","2024-04-01"]]' \
+  --data-urlencode 'fields=["name","start_date","end_date","total_employees","status","docstatus"]' \
+  -H "Authorization: token {api_key}:{api_secret}"
+```
+
+---
+
+### Generate salary slips via Payroll Entry
+
+Payroll Entry is the recommended way to create salary slips in bulk for a pay period. The typical flow is:
+
+<Steps>
+
+<Step title="Create a Payroll Entry draft">
+
+```bash
+curl -X POST "https://{your-site}/api/resource/Payroll%20Entry" \
+  -H "Authorization: token {api_key}:{api_secret}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "company": "Acme Corp",
+    "start_date": "2024-04-01",
+    "end_date": "2024-04-30",
+    "payroll_frequency": "Monthly",
+    "payment_account": "Payroll Payable - AC",
+    "cost_center": "Main - AC"
+  }'
+```
+</Step>
+
+<Step title="Create salary slips for the entry">
+
+Call the `create_salary_slips` method on the Payroll Entry:
+
+```bash
+curl -X POST "https://{your-site}/api/method/frappe.client.run_doc_method" \
+  -H "Authorization: token {api_key}:{api_secret}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "dt": "Payroll Entry",
+    "dn": "Payroll Entry/00001",
+    "method": "create_salary_slips"
+  }'
+```
+
+Frappe HR creates one Salary Slip per eligible employee in the pay period. The number of employees is shown in `total_employees`.
+</Step>
+
+<Step title="Submit the Payroll Entry">
+
+Submitting the Payroll Entry also submits all associated salary slips:
+
+```bash
+curl -X POST "https://{your-site}/api/method/frappe.client.submit" \
+  -H "Authorization: token {api_key}:{api_secret}" \
+  -H "Content-Type: application/json" \
+  -d '{"doc": {"doctype": "Payroll Entry", "name": "Payroll Entry/00001"}}'
+```
+</Step>
+
+</Steps>
+
+<Note>
+Generating salary slips for large organisations is a background job. After calling `create_salary_slips`, poll the Payroll Entry record and check the `status` field. It changes from `Draft` to `Queued` to `Submitted` as the background job progresses.
+</Note>

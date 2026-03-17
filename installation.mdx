@@ -1,0 +1,180 @@
+---
+title: Installation
+description: How to install Frappe HR using Frappe Cloud, Docker, or a local bench setup
+---
+
+Frappe HR runs on the [Frappe Framework](https://frappeframework.com) and requires both Frappe and ERPNext on the same bench site. Choose the setup path that matches your environment.
+
+<Note>
+Frappe HR requires **Python 3.10 or later**, **Frappe Framework ≥17.0**, and **ERPNext ≥17.0**. The easiest way to get started is [Frappe Cloud](#managed-hosting-frappe-cloud).
+</Note>
+
+## Prerequisites
+
+Before installing, make sure the following are available on your system:
+
+| Dependency | Minimum version | Notes |
+|---|---|---|
+| Python | 3.10 | Required by Frappe Framework |
+| Node.js | 18 LTS | Used to build frontend assets |
+| MariaDB | 10.6 | Primary database engine |
+| Redis | 6 | Queue and cache backend |
+| Frappe bench CLI | latest | Manages sites and apps |
+| ERPNext | ≥17.0 | Required dependency of Frappe HR |
+
+---
+
+## Managed hosting (Frappe Cloud)
+
+The fastest way to get a production-ready Frappe HR instance is [Frappe Cloud](https://frappecloud.com). It handles installation, upgrades, backups, monitoring, and support.
+
+<Steps>
+  <Step title="Sign up for Frappe Cloud">
+    Go to [frappecloud.com/hrms/signup](https://frappecloud.com/hrms/signup) and create an account.
+  </Step>
+  <Step title="Create a new site">
+    From the Frappe Cloud dashboard, click **New Site**. Select your preferred region and plan.
+  </Step>
+  <Step title="Install Frappe HR">
+    During site setup, select **Frappe HR** from the app marketplace. Frappe Cloud automatically installs ERPNext and Frappe HR together.
+  </Step>
+  <Step title="Access your site">
+    Once provisioning completes (typically under five minutes), open the site URL from your dashboard and log in with the credentials you set during setup.
+  </Step>
+</Steps>
+
+---
+
+## Docker setup
+
+The repository includes a `docker-compose.yml` that spins up MariaDB, Redis, and a Frappe bench container with Frappe HR pre-installed. This is the quickest path for local evaluation or development.
+
+### Requirements
+
+- [Docker](https://docs.docker.com/get-docker/) and Docker Compose installed and running
+- Git
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/frappe/hrms
+    ```
+  </Step>
+  <Step title="Start the containers">
+    ```bash
+    cd hrms/docker
+    docker-compose up
+    ```
+
+    The `init.sh` script runs inside the container. It initialises a new bench, fetches ERPNext and Frappe HR, creates a site called `hrms.localhost`, installs the apps, and starts the development server. This typically takes 5–10 minutes on the first run.
+  </Step>
+  <Step title="Access the site">
+    Once you see `bench start` output in the logs, open [http://localhost:8000](http://localhost:8000) in your browser.
+
+    Log in with the default credentials:
+
+    - **Username**: `Administrator`
+    - **Password**: `admin`
+  </Step>
+</Steps>
+
+<Warning>
+The Docker setup is intended for local development and evaluation only. Do not expose it to the internet without securing credentials and configuring a reverse proxy.
+</Warning>
+
+---
+
+## Local bench setup
+
+Use this path to install Frappe HR on your own Linux or macOS machine for development or self-managed production hosting.
+
+### Install bench
+
+If you have not installed the Frappe bench CLI yet, follow the [official bench installation guide](https://frappeframework.com/docs/user/en/installation) to set up Python, Node.js, MariaDB, Redis, and the `bench` command.
+
+### Create a bench and install Frappe HR
+
+<Steps>
+  <Step title="Initialise a new bench">
+    ```bash
+    bench init frappe-bench --frappe-branch version-17
+    cd frappe-bench
+    ```
+  </Step>
+  <Step title="Start the bench server">
+    Keep this running in a dedicated terminal window throughout the setup:
+
+    ```bash
+    bench start
+    ```
+  </Step>
+  <Step title="Create a new site">
+    Open a second terminal window in the `frappe-bench` directory and run:
+
+    ```bash
+    bench new-site hrms.localhost
+    ```
+
+    You will be prompted to set the MariaDB root password and the Administrator password for the new site.
+  </Step>
+  <Step title="Get ERPNext and Frappe HR">
+    Frappe HR depends on ERPNext. Fetch both apps:
+
+    ```bash
+    bench get-app erpnext --branch version-17
+    bench get-app hrms
+    ```
+  </Step>
+  <Step title="Install the apps on your site">
+    ```bash
+    bench --site hrms.localhost install-app erpnext
+    bench --site hrms.localhost install-app hrms
+    ```
+
+    The installer runs `after_install` hooks that create default fixtures including leave types, employment types, email templates, and role profiles.
+  </Step>
+  <Step title="Add the site to your hosts file">
+    ```bash
+    bench --site hrms.localhost add-to-hosts
+    ```
+
+    This maps `hrms.localhost` to `127.0.0.1` in `/etc/hosts` so you can access the site by hostname.
+  </Step>
+  <Step title="Open the site">
+    Navigate to [http://hrms.localhost:8080](http://hrms.localhost:8080) in your browser and log in as `Administrator` with the password you set in step 3.
+  </Step>
+</Steps>
+
+<Note>
+For a production deployment, run `bench setup production <your-user>` to configure nginx, supervisor, and SSL after completing the steps above. See the [Frappe bench production setup guide](https://frappeframework.com/docs/user/en/bench/guides/setup-production) for details.
+</Note>
+
+---
+
+## Post-install: verifying your setup
+
+After logging in, confirm that Frappe HR is installed correctly:
+
+1. Click the grid icon in the top-left to open the **Apps** switcher. You should see the **Frappe HR** tile.
+2. Click the Frappe HR tile. The app home page (`/desk/people`) opens, showing the People module.
+3. Navigate to **HR Settings** (`HR > HR Settings`) and verify that default notification templates are populated — the installer sets these automatically.
+
+<CodeGroup>
+```bash Check installed apps (bench)
+bench --site hrms.localhost list-apps
+```
+
+```bash Check installed apps (console)
+bench --site hrms.localhost console
+# then in the Python console:
+frappe.get_installed_apps()
+```
+</CodeGroup>
+
+Expected output includes `frappe`, `erpnext`, and `hrms`.
+
+---
+
+## Next steps
+
+Once the site is running, continue to the [Quickstart](/quickstart) guide to configure your company, set up a holiday list, and create your first employee.

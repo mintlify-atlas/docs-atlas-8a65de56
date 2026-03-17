@@ -1,0 +1,121 @@
+---
+title: Leave allocation
+description: Allocate leave days to employees manually or automatically, manage earned leave accrual, and adjust balances mid-period.
+---
+
+A **Leave Allocation** (series `HR-LAL-YYYY-`) is the ledger record that grants an employee a specific number of days for a specific leave type over a date range. Every leave application draws down against a submitted allocation.
+
+## How allocations are created
+
+There are three ways allocations are created:
+
+| Method | Trigger |
+|--------|---------|
+| **Automatic via Leave Policy Assignment** | Submitting a **Leave Policy Assignment** creates allocations for all leave types in the policy. |
+| **Manual** | HR creates a **Leave Allocation** document directly for one employee and leave type. |
+| **Compensatory** | Approving a **Compensatory Leave Request** creates an allocation for the compensatory leave type. |
+
+## Creating a manual allocation
+
+<Steps>
+  <Step title="Open Leave Allocation">
+    Go to **HR > Leave Management > Leave Allocation > New**.
+  </Step>
+  <Step title="Select the employee and leave type">
+    - **Employee** — choose the employee
+    - **Leave Type** — choose the leave type (LWP leave types are blocked from allocation)
+  </Step>
+  <Step title="Set the period">
+    Set **From Date** and **To Date**. The allocation is valid only within this range. Leave applications outside this range are rejected.
+  </Step>
+  <Step title="Enter the number of leaves">
+    Enter **New Leaves Allocated**. This is the fresh entitlement for the period, not including any carry-forward.
+  </Step>
+  <Step title="Carry forward (optional)">
+    Check **Add unused leaves from previous allocations** to include unused balance from the previous allocation period. The **Unused leaves** field populates automatically as a read-only value.
+  </Step>
+  <Step title="Submit">
+    Click **Submit**. The system posts ledger entries and the **Total Leaves Allocated** becomes available for the employee to consume.
+  </Step>
+</Steps>
+
+<Warning>
+You cannot create an overlapping allocation for the same employee and leave type. If an allocation already exists for the same period, the system raises an **OverlapError**.
+</Warning>
+
+## Allocation fields reference
+
+| Field | Description |
+|-------|-------------|
+| **Employee** | The employee receiving the allocation. |
+| **Leave Type** | The leave type being allocated. |
+| **From Date** | Start of the allocation period. |
+| **To Date** | End of the allocation period. |
+| **New Leaves Allocated** | Fresh leave days granted for this period. |
+| **Add unused leaves from previous allocations** | Whether to include carry-forward balance. |
+| **Unused leaves** | Auto-calculated carry-forward balance (read-only). |
+| **Total Leaves Allocated** | Sum of new leaves and carry-forward leaves (read-only). |
+| **Total Leaves Encashed** | Days encashed against this allocation (read-only, shown when > 0). |
+| **Carry Forwarded Leaves** | How many days from this allocation were carried into the next period (read-only). |
+| **Leave Period** | The leave period this allocation belongs to (populated automatically from the Leave Policy Assignment). |
+| **Leave Policy Assignment** | The originating assignment, if any. |
+| **Expired** | Set automatically when the allocation's validity period has passed. |
+| **Description** | Optional notes about why this allocation was created. |
+
+## Earned leave accrual
+
+For leave types with **Is Earned Leave** enabled, allocations work differently:
+
+- The allocation is created with **New Leaves Allocated** set to 0.
+- A scheduler job runs according to the **Earned Leave Frequency** (Monthly, Quarterly, Half-Yearly, or Yearly) and adds incremental leaves to the allocation.
+- The **Earned Leave Schedule** table on the allocation shows the history of each accrual: date, number of leaves, whether it was attempted, succeeded, or failed.
+
+### Accrual calculation
+
+The number of leaves accrued per cycle is:
+
+```
+Leaves per cycle = Annual Allocation / Number of cycles per year
+```
+
+For example, with an annual allocation of 15 days at monthly frequency: `15 / 12 = 1.25` days per month. If **Rounding** is set to `1.0`, each monthly accrual rounds to 1 day.
+
+<Note>
+The **Allocate on Day** field on the leave type controls when within the month accrual happens: **First Day**, **Last Day**, or the employee's **Date of Joining**.
+</Note>
+
+### Retrying failed accruals
+
+If a scheduled accrual fails (visible in the **Earned Leave Schedule** table with **Failed** checked), you can retry it using the **Retry Failed Allocations** button on the allocation. This button is only visible to users with **Write** permission on **Leave Allocation**.
+
+## Adjusting balances after submission
+
+After an allocation is submitted you can still adjust the balance in two ways:
+
+### Update New Leaves Allocated
+
+You can edit **New Leaves Allocated** directly on a submitted allocation. The system creates a corrective ledger entry for the difference.
+
+<Warning>
+You cannot update **New Leaves Allocated** on an earned leave allocation that was created through a **Leave Policy Assignment**. Earned leave accrual is governed by the scheduler; manual adjustments are not permitted.
+</Warning>
+
+### Create a Leave Adjustment
+
+For auditable mid-period corrections, use the **Create Leave Adjustment** button on the allocation. This creates a **Leave Adjustment** document with:
+
+- **Adjustment Type** — Add or Deduct
+- **Leaves to Adjust** — number of days
+- **Posting Date** — effective date of the adjustment
+- **Reason for Adjustment** — mandatory text explaining the change
+
+## Carry-forward caps and validation
+
+When you check **Add unused leaves from previous allocations**, the system:
+
+1. Fetches the most recent prior submitted allocation for the same employee and leave type.
+2. Calculates unused balance from the leave ledger.
+3. Applies the **Maximum Carry Forwarded Leaves** cap from the leave type if set.
+4. Caps total leaves allocated at **Maximum Leave Allocation Allowed per Leave Period** if set.
+
+The system blocks back-dated allocations if a more recent carry-forward allocation already exists for the same employee and leave type, because that would invalidate the already-carried balance.

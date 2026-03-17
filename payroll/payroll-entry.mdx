@@ -1,0 +1,109 @@
+---
+title: Payroll entry
+description: Run payroll in bulk — create a payroll entry, filter employees, generate salary slips, submit them, and post payment journal entries.
+keywords: [payroll entry, payroll run, bulk payroll, salary slip, journal entry, bank entry, payroll frequency]
+---
+
+A **Payroll Entry** is the control document for a single payroll run. It groups all salary slips for a given company, currency, and pay period, then drives the accounting workflow.
+
+## Creating a payroll entry
+
+Go to **Payroll > Payroll Entry > New**.
+
+### Overview tab
+
+| Field | Description |
+|---|---|
+| **Posting Date** | Date recorded on the generated journal entries. Defaults to today. |
+| **Company** | Company being paid. |
+| **Currency** | Only employees with salary structure assignments in this currency are included. |
+| **Exchange Rate** | Conversion rate to the company currency, used when posting multi-currency journal entries. |
+| **Payroll Payable Account** | Liability account that accumulates the net pay obligation before the bank entry clears it. Must be of type *Payable*. |
+| **Payroll Frequency** | Filters salary structures — only structures with the matching frequency are eligible. |
+| **Start Date / End Date** | Payroll period. The system auto-fills the end date from the frequency and start date. |
+| **Salary Slip Based on Timesheet** | Enable to process employees whose pay is driven by timesheet hours. |
+| **Deduct Tax For Unsubmitted Tax Exemption Proof** | When enabled, employees who have not submitted investment proof are taxed without the benefit of their declared exemptions. |
+
+### Employees tab
+
+#### Filtering employees
+
+Use the filter fields to narrow which employees are loaded:
+
+| Filter | Description |
+|---|---|
+| **Branch** | Include only employees from this branch |
+| **Department** | Include only employees from this department |
+| **Designation** | Include only employees with this designation |
+| **Grade** | Include only employees with this grade |
+
+After setting filters, click **Get Employees**. The system populates the **Employees** table with all active employees who have a valid salary structure assignment matching the company, currency, frequency, and payroll period.
+
+<Note>
+An employee is excluded if they already have a submitted salary slip for the same date range or if their salary is withheld in a **Salary Withholding** cycle.
+</Note>
+
+#### Validate attendance
+
+Enable **Validate Attendance** to block submission when any employee in the list has unmarked attendance days. The attendance check respects each employee's holiday list.
+
+### Accounting & Payment tab
+
+| Field | Description |
+|---|---|
+| **Cost Center** | Default cost center for journal entry lines where no employee-level cost center applies |
+| **Project** | Optional project tag added to journal entry lines |
+| **Payment Account** | Bank or cash account debited when you create the payment bank entry |
+| **Bank Account** | Bank Account master record linked to the payment account |
+
+## Running payroll
+
+<Steps>
+  <Step title="Fill in overview details">
+    Set **Company**, **Currency**, **Payroll Frequency**, and the **Start Date**. The system calculates **End Date** automatically based on the frequency.
+  </Step>
+  <Step title="Get employees">
+    On the **Employees** tab, apply any filters and click **Get Employees**. Review the employee list and remove anyone who should be skipped this cycle.
+  </Step>
+  <Step title="Submit the payroll entry">
+    Click **Submit**. The system validates that no duplicate salary slips exist for the period, then creates salary slips for all listed employees in the background. For more than 30 employees the status changes to *Queued* and creation runs asynchronously.
+  </Step>
+  <Step title="Submit salary slips">
+    Once salary slips are created, click **Submit Salary Slips**. The system submits each slip and automatically posts an **accrual journal entry** debiting the salary expense accounts and crediting the **Payroll Payable Account**.
+  </Step>
+  <Step title="Create the bank payment entry">
+    Click **Make Bank Entry** to create a **Bank Entry** journal that debits the **Payroll Payable Account** and credits the **Payment Account**, clearing the liability.
+  </Step>
+</Steps>
+
+<Tip>
+If your **Payroll Settings** have employee-wise accounting enabled, Frappe HR creates per-employee party entries in the journal, making it easier to reconcile individual payments.
+</Tip>
+
+## Payroll entry statuses
+
+| Status | Meaning |
+|---|---|
+| *Draft* | Entry not yet submitted |
+| *Submitted* | Entry submitted; salary slips are being (or have been) created |
+| *Queued* | Salary slip creation or submission is running in the background |
+| *Failed* | An error occurred during background processing; check **Error Message** for details |
+| *Cancelled* | Entry cancelled; all linked salary slips and journal entries are reversed |
+
+## Payroll corrections
+
+If you need to correct a submitted payroll run:
+
+1. Cancel the **Payroll Entry**. This cancels and deletes all linked salary slips and cancels the accrual journal entry.
+2. Make the required changes (e.g., fix attendance, update component amounts, adjust additional salary).
+3. Create a new **Payroll Entry** for the same period.
+
+<Warning>
+Cancelling a payroll entry with more than 50 salary slips is queued as a background job. Do not refresh the page until the status changes from *Queued*.
+</Warning>
+
+For minor corrections to a single employee without re-running the full payroll, cancel and amend the individual **Salary Slip** directly.
+
+## Email salary slips to employees
+
+When salary slips are submitted through a payroll entry, the system automatically emails each employee their slip if **Email Salary Slip to Employee** is enabled in **Payroll Settings**.

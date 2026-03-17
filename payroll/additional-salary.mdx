@@ -1,0 +1,89 @@
+---
+title: Additional salary
+description: Add one-time or recurring salary components outside the regular salary structure — covering additional salary, retention bonuses, employee incentives, and arrear calculations.
+keywords: [additional salary, retention bonus, employee incentive, arrear, one-time payment, recurring deduction]
+---
+
+An **Additional Salary** lets you inject an earning or deduction into an employee's salary slip for a specific payroll cycle without changing their salary structure. Use it for bonuses, reimbursement payouts, recovery of advances, and any other ad-hoc adjustment.
+
+## Additional salary
+
+Go to **Payroll > Additional Salary > New**.
+
+### Fields
+
+| Field | Description |
+|---|---|
+| **Employee** | The employee to receive or pay the additional amount |
+| **Salary Component** | The earning or deduction component to use |
+| **Amount** | The amount to add or deduct |
+| **Is Recurring** | Enable for an amount that repeats every cycle |
+| **Payroll Date** | (Non-recurring) The date of the payroll cycle in which the amount should appear |
+| **From Date / To Date** | (Recurring) The period during which the component is included each cycle |
+| **Overwrite Salary Structure Amount** | When enabled, the additional salary amount replaces the component's regular structure amount rather than being added on top of it |
+| **Deduct Full Tax on Selected Payroll Date** | Deduct all outstanding tax in the cycle this additional salary falls on — useful for bonus payments |
+| **Company** | Company for the entry |
+| **Currency** | Auto-fetched from the employee's salary structure assignment |
+
+Submit the additional salary document. The next salary slip generated for that employee within the matching payroll date or date range will automatically include the component.
+
+<Note>
+For a recurring additional salary, you can disable it after submission by checking **Disabled** on the submitted document. The component will stop appearing from the next cycle onward.
+</Note>
+
+### Recurring example: loan recovery
+
+If you need to recover a fixed amount from an employee's salary every month for six months:
+
+1. Create an **Additional Salary** with a deduction component (e.g., *Loan Recovery*).
+2. Enable **Is Recurring**.
+3. Set **From Date** to the first recovery month and **To Date** to the last.
+4. Submit. The deduction appears automatically on every salary slip within that window.
+
+## Retention bonus
+
+Go to **Payroll > Retention Bonus > New**.
+
+A **Retention Bonus** schedules a one-time bonus component for a specific payroll date. It creates an **Additional Salary** record in the background when submitted.
+
+| Field | Description |
+|---|---|
+| **Employee** | The employee receiving the bonus |
+| **Bonus Payment Date** | The payroll cycle date on which the bonus is paid |
+| **Bonus Amount** | Amount of the bonus |
+| **Salary Component** | Earning component used for the payout |
+
+## Employee incentive
+
+Go to **Payroll > Employee Incentive > New**.
+
+An **Employee Incentive** records a performance-based incentive payment and creates an **Additional Salary** on submission.
+
+| Field | Description |
+|---|---|
+| **Employee** | The employee receiving the incentive |
+| **Incentive Amount** | Amount to pay |
+| **Payroll Date** | Payroll cycle date for the payment |
+| **Salary Component** | Earning component used for the payout |
+
+## Arrear calculation
+
+When an employee receives a salary revision with a backdated effective date, they are owed arrears — the difference between what they were paid and what they should have been paid.
+
+To calculate and pay arrears:
+
+<Steps>
+  <Step title="Create the revised salary structure assignment">
+    Create a new **Salary Structure Assignment** with the revised **Base** and the backdated **From Date**.
+  </Step>
+  <Step title="Run arrear calculation">
+    Go to **Payroll > Process Arrears**. Select the employee and the period for which arrears are due. The system computes the difference per cycle for all components marked as **Arrear Component** on their salary component master.
+  </Step>
+  <Step title="Create additional salary">
+    The arrear process generates an **Additional Salary** with the total arrear amount for inclusion in the next salary slip.
+  </Step>
+</Steps>
+
+<Note>
+Only salary components with **Arrear Component** enabled on the component master are included in the arrear calculation. Components based on the income tax slab are excluded from arrear calculations.
+</Note>

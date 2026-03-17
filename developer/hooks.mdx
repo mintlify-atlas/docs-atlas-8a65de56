@@ -1,0 +1,186 @@
+---
+title: "Frappe hooks"
+description: "A guide to the hooks used in Frappe HR and how to add custom hooks in an app built on top of Frappe HR"
+---
+
+Frappe's hook system lets apps declare how they participate in the framework's lifecycle. All of Frappe HR's hooks live in `hrms/hooks.py`. This page explains each major hook category with examples drawn directly from that file.
+
+## `doc_events` — document lifecycle hooks
+
+`doc_events` maps DocType names to event names and the Python functions that should run when those events fire. You can attach to any standard Frappe document event: `validate`, `before_save`, `on_submit`, `on_cancel`, `on_trash`, and more.
+
+```python
+# hrms/hooks.py (excerpt)
+doc_events = {
+    "User": {
+        "validate": [
+            "erpnext.setup.doctype.employee.employee.validate_employee_role",
+            "hrms.overrides.employee_master.update_approver_user_roles",
+        ],
+    },
+    "Company": {
+        "validate": "hrms.overrides.company.validate_default_accounts",
+        "on_update": [
+            "hrms.overrides.company.make_company_fixtures",
+            "hrms.overrides.company.set_default_hr_accounts",
+        ],
+        "on_trash": "hrms.overrides.company.handle_linked_docs",
+    },
+    "Payment Entry": {
+        "on_submit": "hrms.hr.doctype.expense_claim.expense_claim.update_payment_for_expense_claim",
+        "on_cancel": "hrms.hr.doctype.expense_claim.expense_claim.update_payment_for_expense_claim",
+        "on_update_after_submit": "hrms.hr.doctype.expense_claim.expense_claim.update_payment_for_expense_claim",
+    },
+    "Employee": {
+        "validate": "hrms.overrides.employee_master.validate_onboarding_process",
+        "on_update": [
+            "hrms.overrides.employee_master.update_approver_role",
+            "hrms.overrides.employee_master.publish_update",
+        ],
+        "after_insert": "hrms.overrides.employee_master.update_job_applicant_and_offer",
+        "on_trash": "hrms.overrides.employee_master.update_employee_transfer",
+    },
+}
+```
+
+Key things to note:
+
+- A single event can run **multiple handlers** (pass a list instead of a string).
+- Handlers receive the document object as the first argument automatically.
+- You can attach to **ERPNext DocTypes** (like `Payment Entry`, `Company`, `User`) from Frappe HR, because Frappe merges `doc_events` across all installed apps.
+
+## `scheduler_events` — scheduled tasks
+
+`scheduler_events` registers background functions that run on a fixed cadence. The Frappe scheduler calls these when `bench start` is running.
+
+```python
+scheduler_events = {
+    "all": [
+        "hrms.hr.doctype.interview.interview.send_interview_reminder",
+    ],
+    "hourly_long": [
+        "hrms.hr.doctype.shift_type.shift_type.process_auto_attendance_for_all_shifts",
+    ],
+    "daily": [
+        "hrms.controllers.employee_reminders.send_birthday_reminders",
+        "hrms.controllers.employee_reminders.send_work_anniversary_reminders",
+    ],
+    "daily_long": [
+        "hrms.hr.utils.allocate_earned_leaves",
+    ],
+    "weekly": ["hrms.controllers.employee_reminders.send_reminders_in_advance_weekly"],
+    "monthly": ["hrms.controllers.employee_reminders.send_reminders_in_advance_monthly"],
+}
+```
+
+Available frequencies: `all` (every minute), `hourly`, `hourly_long`, `daily`, `daily_long`, `weekly`, `monthly`.
+
+The `_long` variants run in a separate worker queue with a longer timeout — use them for tasks that process large datasets.
+
+## `override_doctype_class` — replacing ERPNext DocType classes
+
+This hook lets you replace the Python class that backs a DocType with your own subclass. Frappe HR uses it to extend four ERPNext DocTypes:
+
+```python
+override_doctype_class = {
+    "Employee": "hrms.overrides.employee_master.EmployeeMaster",
+    "Timesheet": "hrms.overrides.employee_timesheet.EmployeeTimesheet",
+    "Payment Entry": "hrms.overrides.employee_payment_entry.EmployeePaymentEntry",
+    "Project": "hrms.overrides.employee_project.EmployeeProject",
+}
+```
+
+Your override class must subclass the original DocType class:
+
+```python
+# hrms/overrides/employee_master.py
+from erpnext.setup.doctype.employee.employee import Employee
+
+class EmployeeMaster(Employee):
+    def validate(self):
+        super().validate()
+        # your extra validation logic
+```
+
+<Warning>
+Only one app can override a given DocType class. If two installed apps both declare an `override_doctype_class` entry for the same DocType, Frappe will use the last one it loads. Chain your overrides by subclassing the previous override class.
+</Warning>
+
+## `override_doctype_dashboards` — custom dashboard data
+
+Frappe HR adds HR-related connections to the dashboards of several ERPNext DocTypes:
+
+```python
+override_doctype_dashboards = {
+    "Employee": "hrms.overrides.dashboard_overrides.get_dashboard_for_employee",
+    "Holiday List": "hrms.overrides.dashboard_overrides.get_dashboard_for_holiday_list",
+    "Task": "hrms.overrides.dashboard_overrides.get_dashboard_for_project",
+    "Project": "hrms.overrides.dashboard_overrides.get_dashboard_for_project",
+    "Timesheet": "hrms.overrides.dashboard_overrides.get_dashboard_for_timesheet",
+    "Bank Account": "hrms.overrides.dashboard_overrides.get_dashboard_for_bank_account",
+}
+```
+
+Each function receives a `data` dict containing the existing dashboard configuration and should return a modified version of it.
+
+## `doctype_js` — injecting JavaScript into ERPNext forms
+
+`doctype_js` injects a JavaScript file into the form view of a specific DocType. Frappe HR uses this to add HR-specific buttons and behaviour to ERPNext forms without modifying ERPNext directly:
+
+```python
+doctype_js = {
+    "Employee": "public/js/erpnext/employee.js",
+    "Company": "public/js/erpnext/company.js",
+    "Department": "public/js/erpnext/department.js",
+    "Timesheet": "public/js/erpnext/timesheet.js",
+    "Payment Entry": "public/js/erpnext/payment_entry.js",
+    "Journal Entry": "public/js/erpnext/journal_entry.js",
+    "Delivery Trip": "public/js/erpnext/delivery_trip.js",
+    "Bank Transaction": "public/js/erpnext/bank_transaction.js",
+}
+```
+
+Paths are relative to the app's `public/` directory. The injected file has access to the standard `frm` (Form) object.
+
+## `website_generators` — public web pages from DocTypes
+
+`website_generators` tells Frappe to create a public-facing web page for every record of the listed DocType:
+
+```python
+website_generators = ["Job Opening"]
+```
+
+Frappe HR uses this so every **Job Opening** record automatically gets a public URL (e.g. `/jobs/senior-python-developer`). The Job Opening DocType includes a `route` field and a web template that Frappe renders.
+
+## Adding custom hooks in a downstream app
+
+If you build a custom app on top of Frappe HR, declare your hooks in your app's own `hooks.py`. Frappe merges hook registrations from all installed apps at startup.
+
+```python
+# your_app/hooks.py
+
+# Add a doc_event handler without touching Frappe HR source
+doc_events = {
+    "Leave Application": {
+        "on_submit": "your_app.leave.notify_hr_on_submit",
+    },
+}
+
+# Add a new scheduled task
+scheduler_events = {
+    "daily": [
+        "your_app.tasks.sync_attendance_from_biometric_device",
+    ],
+}
+
+# Override a regional function for a country not yet supported
+regional_overrides = {
+    "Germany": {
+        "hrms.hr.utils.calculate_tax_with_marginal_relief": "your_app.regional.germany.utils.calculate_tax_with_marginal_relief",
+    },
+}
+```
+
+<Note>
+For `doc_events` and `scheduler_events`, Frappe **merges** lists from all apps, so multiple apps can safely attach handlers to the same event. For `override_doctype_class`, only the last registration wins — coordinate with other app authors if needed.
+</Note>

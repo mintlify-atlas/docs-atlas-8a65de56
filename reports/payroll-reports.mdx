@@ -1,0 +1,222 @@
+---
+title: "Payroll reports"
+description: "Run and interpret the Salary Register, Bank Remittance, Income Tax Deductions, Accrued Earnings, and statutory deduction reports in Frappe HR."
+keywords: ["payroll reports", "salary register", "bank remittance", "income tax", "accrued earnings", "provident fund", "frappe hr"]
+---
+
+Frappe HR includes nine payroll reports that cover every stage of the pay cycle: verifying salary calculations, preparing bank transfer files, meeting statutory obligations, and tracking benefit accruals.
+
+<Note>
+All payroll reports read from **submitted** Salary Slips (`docstatus = 1`) unless otherwise noted. Drafts and cancelled documents are excluded.
+</Note>
+
+## Salary Register
+
+The **Salary Register** is the primary payroll audit report. It lists one row per submitted Salary Slip and breaks out every earning and deduction component into its own column.
+
+### Filters
+
+| Filter | Description |
+|---|---|
+| Company | Required |
+| From Date / To Date | Salary slip start date ≥ From Date and end date ≤ To Date |
+| Document Status | Draft, Submitted, or Cancelled |
+| Employee | Optional; restrict to a single employee |
+| Department | Optional |
+| Designation | Optional |
+| Branch | Optional |
+| Currency | Show amounts in a specific currency; leave blank for the company's default currency |
+
+### Columns
+
+| Column | Description |
+|---|---|
+| Salary Slip ID | Link to the Salary Slip document |
+| Employee | Employee ID |
+| Employee Name | Employee full name |
+| Date of Joining | Employee's joining date |
+| Branch | Employee's branch |
+| Department | Employee's department |
+| Designation | Employee's designation |
+| Company | Employee's company |
+| Start Date | Payroll period start |
+| End Date | Payroll period end |
+| Leave Without Pay | LWP days deducted in this slip |
+| Absent Days | Absent days deducted |
+| Payment Days | Paid working days |
+| *(Earning components)* | One column per earning type present in the result set (e.g., Basic, HRA, Conveyance) |
+| Gross Pay | Total of all earnings |
+| *(Deduction components)* | One column per deduction type (e.g., PF, ESI, Income Tax) |
+| Loan Repayment | Total loan repayment amount (shown when the Lending app is installed) |
+| Total Deduction | Sum of all deductions and loan repayment |
+| Net Pay | Gross Pay − Total Deduction |
+
+<Tip>
+The earning and deduction columns are dynamic: only components that appear in at least one Salary Slip in the result set are included. Run the report for a single month and export to Excel to get a clean, consistent column layout for that period.
+</Tip>
+
+### Use for audit and reconciliation
+
+- Compare **Gross Pay** totals against your payroll journal entry in ERPNext to verify the accounting entry is correct.
+- Filter by **Department** to produce a departmental payroll cost report.
+- Use **Leave Without Pay** and **Absent Days** columns to cross-check with the Monthly Attendance Sheet.
+
+---
+
+## Bank Remittance
+
+The **Bank Remittance** report generates the data you need to upload salary payments to your bank's bulk payment portal. Each row represents one employee's net pay for a payroll entry.
+
+### Filters
+
+| Filter | Description |
+|---|---|
+| Company | Required |
+| From Date / To Date | Payroll entry posting date range |
+
+### Columns
+
+| Column | Description |
+|---|---|
+| Payroll Number | Link to the Payroll Entry |
+| Payment Date | Date the salary slip was last modified (used as the payment date) |
+| Employee Name | Employee ID and name |
+| Bank Name | Employee's bank name from their Employee record |
+| Employee A/C Number | Employee's bank account number |
+| IFSC Code | Bank IFSC code (shown for Indian companies) |
+| Currency | Company's default currency |
+| Net Salary Amount | Net pay to transfer |
+
+<Note>
+Only salary slips with a **Status** of Submitted or Paid, and where the employee has a bank name and account number on record, appear in this report. Employees without bank details are silently excluded.
+</Note>
+
+### Use for audit and reconciliation
+
+- Export to Excel and upload directly to your bank's ECS or NEFT bulk payment template.
+- Verify the **Debit A/C Number** (the company's bank account configured on the Payroll Entry) before uploading.
+- Cross-check the total **Net Salary Amount** against the payroll journal entry amount.
+
+---
+
+## Income Tax Deductions
+
+The **Income Tax Deductions** report lists every income tax component deducted from submitted salary slips. Use it to prepare TDS certificates and verify monthly tax deductions.
+
+### Filters
+
+| Filter | Description |
+|---|---|
+| Company | Required |
+| Month | Calendar month |
+| Year | Calendar year |
+| Department | Optional |
+| Branch | Optional |
+
+### Columns
+
+| Column | Description |
+|---|---|
+| Employee | Employee ID |
+| Employee Name | Employee full name |
+| PAN Number | Employee PAN (shown for Indian companies only) |
+| Income Tax Component | Name of the salary component flagged as an income tax component |
+| Income Tax Amount | Amount deducted for that component |
+| Gross Pay | Gross pay from the same salary slip |
+| Posting Date | Salary slip posting date |
+
+<Note>
+A salary component appears in this report only if its **Is Income Tax Component** flag is enabled in the Salary Component setup. Components not flagged as income tax components are excluded regardless of their name.
+</Note>
+
+### Use for audit and reconciliation
+
+- Sum the **Income Tax Amount** column by employee to get the total TDS deducted for the month.
+- For Indian companies, use the **PAN Number** column to populate Form 24Q challan data.
+- Compare with the **Salary Register** to confirm the income tax component is applied consistently across employees.
+
+---
+
+## Accrued Earnings Report
+
+The **Accrued Earnings Report** tracks benefit components that accrue over the payroll period but are paid out separately — for example, annual bonus or leave encashment accruals. It shows how much has accrued and how much has been paid out, so you can identify any unpaid balance.
+
+### Filters
+
+| Filter | Description |
+|---|---|
+| Company | Required |
+| Payroll Period | The benefit payroll period to analyse |
+| Employee | Optional |
+| Department | Optional |
+| Branch | Optional |
+| Salary Component | Optional; restrict to a single accrual component |
+| Flexible Benefit | Filter by Yes, No, or show all |
+
+### Columns
+
+| Column | Description |
+|---|---|
+| Employee | Employee ID |
+| Employee Name | Employee full name |
+| Salary Component | The accrual salary component |
+| Yearly Benefit | Configured yearly benefit amount from the salary structure |
+| Total Accrued | Sum of all Accrual-type ledger entries for the component and period |
+| Total Payout | Sum of all Payout-type ledger entries |
+| Unpaid Accrual | Total Accrued − Total Payout |
+| Flexible Component | Whether this is a flexible benefit component |
+| Action | Link to create an Additional Salary to pay out the unpaid accrual (non-flexible components only) |
+
+<Tip>
+For non-flexible components with a positive **Unpaid Accrual**, click **Create Additional Salary** in the Action column to generate an Additional Salary document directly from the report.
+</Tip>
+
+---
+
+## Statutory deduction reports
+
+Frappe HR ships with three additional deduction reports for statutory compliance. Each follows the same pattern: filter by company, month, year, department, or branch, and receive a row per employee showing the deduction amount from their submitted salary slip.
+
+### Provident Fund Deductions
+
+Shows employee-wise PF deduction amounts. Use this to generate your monthly PF challan. The report includes both the employee contribution and, where applicable, the employer contribution component.
+
+### Professional Tax Deductions
+
+Shows professional tax deducted per employee. Use this to prepare state-wise PT returns.
+
+### Income Tax Computation
+
+Projects the full income tax workings for a payroll period, including declared investments, exemptions, and the resulting tax liability. Use this during mid-year reviews to check whether the correct tax is being deducted.
+
+---
+
+## Salary Payments Based on Payment Mode
+
+The **Salary Payments Based on Payment Mode** report summarises net pay amounts grouped by payment mode (e.g., Bank Transfer, Cash, Cheque). Use it to reconcile salary disbursement across different payment channels.
+
+---
+
+## Salary Payments via ECS
+
+The **Salary Payments via ECS** report generates a flat file in the format required for Electronic Clearing Service (ECS) salary uploads. It lists employee bank details and net pay amounts for all salary slips in the selected period.
+
+---
+
+## Exporting payroll reports
+
+<Steps>
+  <Step title="Apply filters and run">
+    Open the report from the Frappe desk. Fill in all required filters (Company is required for every payroll report) and click **Run**.
+  </Step>
+  <Step title="Export to Excel">
+    Click the **⋮** menu → **Export** → **Excel**. The `.xlsx` file includes all visible columns with their formatted values.
+  </Step>
+  <Step title="Export to PDF">
+    Click the **⋮** menu → **Export** → **PDF**. The PDF renders the report in a printable layout. For wide reports like the Salary Register, use landscape orientation in your PDF viewer.
+  </Step>
+</Steps>
+
+<Note>
+For regulatory submissions (TDS returns, PF challans), always export to Excel and review the data before uploading to the statutory portal. PDF exports are suitable for internal approvals and record-keeping.
+</Note>

@@ -1,0 +1,93 @@
+---
+title: "Introduction"
+description: "Open source, modern HR and Payroll software for the complete employee lifecycle"
+---
+
+<img
+  src="https://media.brand.dev/98adecf7-afcf-4956-9823-a5a3eca08c3f.svg"
+  alt="Frappe HR"
+  style={{ height: "60px", marginBottom: "24px" }}
+/>
+
+# Welcome to Frappe HR
+
+Frappe HR is a complete, open-source Human Resource Management System (HRMS) built on the [Frappe Framework](https://frappeframework.com). It covers the full employee lifecycle — from onboarding to exit — and integrates seamlessly with [ERPNext](https://erpnext.com) for accounting, payroll payments, and more.
+
+<CardGroup cols={2}>
+  <Card title="Get Started" icon="rocket" href="/installation">
+    Install Frappe HR and set up your first site in minutes
+  </Card>
+  <Card title="Quickstart" icon="play" href="/quickstart">
+    Configure your company, departments, and first employee
+  </Card>
+  <Card title="Developer Guide" icon="code" href="/developer/architecture">
+    Understand the architecture and extend Frappe HR
+  </Card>
+  <Card title="GitHub" icon="github" href="https://github.com/frappe/hrms">
+    View source, report issues, and contribute
+  </Card>
+</CardGroup>
+
+## What is Frappe HR?
+
+Frappe HR is a full-featured HRMS with over 13 modules that handles everything from hiring to retirement. It started as a set of modules within ERPNext and became a standalone product from version 14 onwards.
+
+<CardGroup cols={3}>
+  <Card title="Employee Management" icon="users" href="/employee-management/overview">
+    Manage employee records, departments, grades, and the complete lifecycle
+  </Card>
+  <Card title="Leave & Attendance" icon="calendar" href="/leave-attendance/overview">
+    Leave policies, allocations, applications, shift management, and geolocation check-in
+  </Card>
+  <Card title="Payroll" icon="money-bill" href="/payroll/overview">
+    Salary structures, payroll runs, tax slabs, gratuity, and salary slips
+  </Card>
+  <Card title="Performance" icon="chart-line" href="/performance/overview">
+    Goals, KRAs, appraisal cycles, and 360-degree feedback
+  </Card>
+  <Card title="Recruitment" icon="person-circle-plus" href="/recruitment/overview">
+    Job openings, applicants, interviews, and job offers
+  </Card>
+  <Card title="Expense Management" icon="receipt" href="/expenses/overview">
+    Expense claims, employee advances, and travel requests
+  </Card>
+</CardGroup>
+
+## Key highlights
+
+- **Open source** — GPL-3.0 licensed, self-hostable, no vendor lock-in
+- **Mobile-first** — Progressive Web App (PWA) for leaves, attendance, and salary slips
+- **ERPNext integrated** — Seamless accounting, payments, and project integration
+- **Regional support** — India-specific income tax, HRA exemption, and gratuity calculations
+- **Automated workflows** — Multi-level approvals, reminders, and scheduled tasks
+- **13+ modules** — Everything from onboarding to exit interviews in one platform
+
+## Architecture
+
+Frappe HR is a Frappe Framework application:
+
+- **Backend**: Python, using Frappe's ORM and REST API
+- **Frontend (Desk)**: JavaScript with Frappe's form and list views
+- **Mobile App**: Vue 3 + Ionic (PWA), bundled separately in `frontend/`
+- **Database**: MariaDB (via Frappe bench)
+
+<Note>
+Frappe HR requires both the **Frappe Framework** (≥17.0) and **ERPNext** (≥17.0) to be installed on the same bench site.
+</Note>
+
+## Community & support
+
+<CardGroup cols={2}>
+  <Card title="User Forum" icon="comments" href="https://discuss.erpnext.com/">
+    Ask questions and get help from the ERPNext community
+  </Card>
+  <Card title="Frappe School" icon="graduation-cap" href="https://frappe.school">
+    Courses on Frappe Framework and ERPNext by maintainers
+  </Card>
+  <Card title="Telegram Group" icon="telegram" href="https://t.me/frappehr">
+    Get instant help from the community
+  </Card>
+  <Card title="GitHub Issues" icon="bug" href="https://github.com/frappe/hrms/issues">
+    Report bugs or request features
+  </Card>
+</CardGroup>

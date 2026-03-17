@@ -1,0 +1,103 @@
+---
+title: "Attendance"
+description: "Check in and check out from your phone, view your attendance calendar, and manage shift requests."
+keywords: ["attendance", "check-in", "check-out", "geolocation", "shift", "mobile"]
+---
+
+The **Attendance** tab in the mobile app lets you record your check-in and check-out, view your attendance calendar, manage shift assignments, and submit attendance regularisation requests.
+
+## Check-in and check-out
+
+The check-in panel appears at the top of the **Home** screen when your administrator has enabled the **Allow Employee Check-in from Mobile App** setting in HR Settings.
+
+<Steps>
+  <Step title="Tap the check-in button">
+    On the **Home** screen, tap **Check In** (or **Check Out** if you are already checked in). A confirmation sheet slides up showing the current time.
+  </Step>
+  <Step title="Confirm your location (if geolocation is enabled)">
+    If your administrator has enabled **Allow Geolocation Tracking**, the sheet also shows a map with your current coordinates (latitude and longitude). The app uses the browser's Geolocation API to fetch your position.
+
+    Wait for the location to resolve — the sheet displays **Locating...** while it fetches your coordinates, then shows the latitude and longitude once ready.
+  </Step>
+  <Step title="Confirm the log">
+    Tap **Confirm Check In** (or **Confirm Check Out**) to submit the record. A success toast appears at the bottom of the screen.
+  </Step>
+</Steps>
+
+<Note>
+If geolocation is enabled and your browser cannot retrieve your location, the check-in still submits with coordinates of `0, 0`. Grant location permission to your browser or the installed PWA for accurate coordinates.
+</Note>
+
+### How geolocation is stored
+
+Each check-in creates an **Employee Checkin** record with the following fields:
+
+| Field | Value |
+|-------|-------|
+| `employee` | Your employee ID |
+| `log_type` | `IN` or `OUT` |
+| `time` | Timestamp at the moment you tapped the button |
+| `latitude` | Your GPS latitude (if geolocation tracking is enabled) |
+| `longitude` | Your GPS longitude (if geolocation tracking is enabled) |
+
+The last check-in time is displayed below your name on the Home screen, with a link to the full check-in history.
+
+## Viewing check-in history
+
+Tap **View List** on the Home screen's check-in panel, or go to **Attendance** > **Employee Checkin History**.
+
+The list shows each check-in and check-out entry with its log type, timestamp, latitude, and longitude. You can filter by **Log Type** (IN or OUT) and by **Shift**.
+
+## Attendance dashboard
+
+Tap **Attendance** in the bottom tab bar to open the attendance dashboard. It contains:
+
+- **Attendance calendar** — a monthly view of your attendance status for each working day
+- **Request Attendance** button — opens the attendance regularisation form
+- **Recent Attendance Requests** — your latest regularisation requests
+- **Upcoming Shifts** — your next assigned shifts
+- **Request a Shift** button — opens the shift request form
+- **Recent Shift Requests** — your latest shift requests
+
+## Attendance regularisation requests
+
+If you missed a check-in or need to correct your attendance for a past date, submit an attendance request.
+
+<Steps>
+  <Step title="Open the attendance request form">
+    Tap **Request Attendance** on the Attendance dashboard or the **Request Attendance** quick link on the Home screen.
+  </Step>
+  <Step title="Select the date range">
+    Set the **From Date** and **To Date** for the period you want to regularise. The app sets **To Date** equal to **From Date** by default.
+  </Step>
+  <Step title="Set the reason">
+    Enter the reason for the attendance request in the **Reason** field.
+  </Step>
+  <Step title="Submit">
+    Tap **Submit** to send the request for approval.
+  </Step>
+</Steps>
+
+## Shift management
+
+### Viewing upcoming shifts
+
+The **Upcoming Shifts** section on the Attendance dashboard lists your active shift assignments. Each entry shows the shift name, timing, and the date range of the assignment.
+
+Shift timing is derived from the **Shift Type** linked to your assignment. You can tap **View List** to see all your shift assignments in a filterable list.
+
+### Requesting a shift change
+
+<Steps>
+  <Step title="Open the shift request form">
+    Tap **Request a Shift** on the Attendance dashboard or the **Request a Shift** quick link on the Home screen.
+  </Step>
+  <Step title="Fill in the request details">
+    Select the desired **Shift Type**, set the **From Date** and **To Date**, and provide any supporting details.
+  </Step>
+  <Step title="Submit the request">
+    Tap **Submit** to send the shift request to your approver.
+  </Step>
+</Steps>
+
+Approved shift requests appear in your shift assignments list. You can view the status of past requests under **Recent Shift Requests** on the Attendance dashboard.

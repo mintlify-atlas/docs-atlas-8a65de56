@@ -1,0 +1,152 @@
+---
+title: "API overview"
+description: "Authenticate with Frappe HR's REST API, understand built-in CRUD endpoints, and call whitelisted Python methods"
+---
+
+## Built-in REST API
+
+Frappe Framework exposes a REST API for every DocType automatically. You don't need to write any code to list, create, read, update, or delete records — the endpoints exist as soon as a DocType is defined.
+
+### Base URL pattern
+
+```
+https://{your-site}/api/resource/{DocType}
+```
+
+DocType names use spaces as they appear in the Desk, URL-encoded in requests:
+
+| Operation | Method | URL |
+|---|---|---|
+| List records | `GET` | `/api/resource/Leave%20Application` |
+| Get single record | `GET` | `/api/resource/Leave%20Application/{name}` |
+| Create record | `POST` | `/api/resource/Leave%20Application` |
+| Update record | `PUT` | `/api/resource/Leave%20Application/{name}` |
+| Delete record | `DELETE` | `/api/resource/Leave%20Application/{name}` |
+
+## Authentication
+
+Frappe supports three authentication methods.
+
+### Username and password (session cookie)
+
+Obtain a session cookie by posting credentials:
+
+```bash
+curl -X POST https://{your-site}/api/method/login \
+  -H "Content-Type: application/json" \
+  -d '{"usr": "administrator@example.com", "pwd": "your-password"}'
+```
+
+The response sets a `sid` cookie. Include it in subsequent requests:
+
+```bash
+curl https://{your-site}/api/resource/Employee \
+  -H "Cookie: sid={session-id}"
+```
+
+### Token-based authentication (API key + API secret)
+
+Generate an API key and secret for a User from **User → API Access** in the Desk. Then pass them in the `Authorization` header:
+
+```bash
+curl https://{your-site}/api/resource/Leave%20Application \
+  -H "Authorization: token {api_key}:{api_secret}"
+```
+
+### OAuth 2.0
+
+Frappe supports the OAuth 2.0 Authorization Code flow. Configure a Social Login Key in **Integrations → Social Login Key**, then use the standard OAuth2 flow to obtain a bearer token:
+
+```bash
+curl https://{your-site}/api/resource/Leave%20Application \
+  -H "Authorization: Bearer {access_token}"
+```
+
+## Rate limiting and sessions
+
+Frappe does not enforce hard rate limits by default. Session cookies expire after 24 hours of inactivity (configurable in **System Settings → Session Expiry**). Token-based requests are stateless and do not expire.
+
+## Listing Leave Applications
+
+Fetch approved leave applications for a specific employee:
+
+```bash
+curl -G "https://{your-site}/api/resource/Leave%20Application" \
+  --data-urlencode 'filters=[["employee","=","EMP-00001"],["status","=","Approved"]]' \
+  --data-urlencode 'fields=["name","leave_type","from_date","to_date","total_leave_days"]' \
+  -H "Authorization: token {api_key}:{api_secret}"
+```
+
+Example response:
+
+```json
+{
+  "data": [
+    {
+      "name": "HR-LAP-2024-00042",
+      "leave_type": "Casual Leave",
+      "from_date": "2024-03-10",
+      "to_date": "2024-03-12",
+      "total_leave_days": 3.0
+    }
+  ]
+}
+```
+
+## Submitting a Leave Application
+
+Creating a document sets `docstatus` to `0` (Draft). Submitting it sets `docstatus` to `1`. Use the `frappe.client.submit` whitelisted method to submit:
+
+<Steps>
+
+<Step title="Create the draft">
+
+```bash
+curl -X POST "https://{your-site}/api/resource/Leave%20Application" \
+  -H "Authorization: token {api_key}:{api_secret}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "employee": "EMP-00001",
+    "leave_type": "Casual Leave",
+    "from_date": "2024-04-01",
+    "to_date": "2024-04-02",
+    "half_day": 0,
+    "description": "Personal work"
+  }'
+```
+
+The response contains `{"data": {"name": "HR-LAP-2024-00055", ...}}`.
+</Step>
+
+<Step title="Submit the draft">
+
+```bash
+curl -X POST "https://{your-site}/api/method/frappe.client.submit" \
+  -H "Authorization: token {api_key}:{api_secret}" \
+  -H "Content-Type: application/json" \
+  -d '{"doc": {"doctype": "Leave Application", "name": "HR-LAP-2024-00055"}}'
+```
+</Step>
+
+</Steps>
+
+## Whitelisted Python methods
+
+Frappe HR exposes additional custom endpoints using the `@frappe.whitelist()` decorator. These are reachable at:
+
+```
+POST /api/method/{dotted.python.path}
+```
+
+For example, to call `hrms.api.get_leave_balance_map`:
+
+```bash
+curl -X POST "https://{your-site}/api/method/hrms.api.get_leave_balance_map" \
+  -H "Authorization: token {api_key}:{api_secret}"
+```
+
+Some methods allow guest access (`@frappe.whitelist(allow_guest=True)`), such as `hrms.api.oauth.oauth_providers`. Most require an authenticated session.
+
+<Tip>
+Pass parameters for whitelisted methods as JSON in the request body or as query string parameters. Frappe automatically deserialises them into the function's keyword arguments.
+</Tip>

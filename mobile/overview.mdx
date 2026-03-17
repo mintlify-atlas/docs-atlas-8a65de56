@@ -1,0 +1,127 @@
+---
+title: "Mobile app overview"
+description: "Access Frappe HR from your phone as a Progressive Web App — no app store required."
+keywords: ["mobile app", "PWA", "progressive web app", "frappe hr mobile"]
+---
+
+The Frappe HR mobile app is a [Progressive Web App (PWA)](https://web.dev/progressive-web-apps/) built with **Vue 3** and **Ionic**. It runs entirely in your mobile browser and can be installed on your home screen like a native app — no download from an app store is needed.
+
+## What the mobile app covers
+
+The mobile app focuses on everyday employee self-service actions:
+
+<CardGroup cols={2}>
+  <Card title="Leaves" icon="calendar" href="/mobile/leave">
+    Check your leave balance, apply for leave, and approve team requests
+  </Card>
+  <Card title="Attendance" icon="clock" href="/mobile/attendance">
+    Check in and check out with geolocation, view check-in history, and manage shift requests
+  </Card>
+  <Card title="Expense claims" icon="receipt" href="/mobile/expense-claim">
+    Submit expense claims with receipts and track approval status
+  </Card>
+  <Card title="Salary slips" icon="money-bill" href="/mobile/salary-slip">
+    View earnings and deductions, and download salary slips as PDF
+  </Card>
+</CardGroup>
+
+## How to access the app
+
+Open your Frappe HR site URL followed by `/hrms` in a mobile browser:
+
+```
+https://your-site.example.com/hrms
+```
+
+You log in with the same Frappe credentials you use for the desktop interface. After logging in, the app detects your linked Employee record automatically. If your user account is not linked to an Employee record, you will see an error page.
+
+<Note>
+The `/hrms` path is served by the Frappe bench web server. No additional configuration is required beyond a standard Frappe HR installation.
+</Note>
+
+## Navigation
+
+The app uses a bottom tab bar with five sections:
+
+| Tab | Path |
+|-----|------|
+| **Home** | `/home` |
+| **Attendance** | `/dashboard/attendance` |
+| **Leaves** | `/dashboard/leaves` |
+| **Expenses** | `/dashboard/expense-claims` |
+| **Salary** | `/dashboard/salary-slips` |
+
+The **Home** screen shows a check-in panel (if enabled), quick links for common actions, and a summary of pending requests.
+
+## Installing as a PWA
+
+You can add the app to your phone's home screen so it opens in standalone mode — without browser chrome.
+
+<Tabs>
+  <Tab title="iOS (Safari)">
+    <Steps>
+      <Step title="Open the app in Safari">
+        Navigate to `https://your-site.example.com/hrms` in Safari.
+      </Step>
+      <Step title="Tap the Share button">
+        Tap the **Share** icon (box with an arrow) at the bottom of the screen.
+      </Step>
+      <Step title="Add to Home Screen">
+        Scroll down and tap **Add to Home Screen**, then tap **Add**.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Android (Chrome)">
+    <Steps>
+      <Step title="Open the app in Chrome">
+        Navigate to `https://your-site.example.com/hrms` in Chrome.
+      </Step>
+      <Step title="Open the browser menu">
+        Tap the three-dot menu in the top-right corner.
+      </Step>
+      <Step title="Install the app">
+        Tap **Add to Home screen** or **Install app**, then confirm.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+Once installed, the app launches with the name **Frappe HR** and opens directly to `/hrms`.
+
+## Browser and OS support
+
+The mobile app works on any modern browser that supports PWA features:
+
+- **iOS**: Safari 16.4+ (required for full PWA support including service workers)
+- **Android**: Chrome 90+, Firefox 90+, Samsung Internet 14+
+- **Desktop**: Chrome, Edge, and Firefox on Windows, macOS, and Linux
+
+<Tip>
+For the best experience on iOS, use Safari. Third-party browsers on iOS (Chrome, Firefox) rely on the same WebKit engine but may have limited PWA install support.
+</Tip>
+
+## Push notifications
+
+The app supports push notifications for leave and expense approvals. To enable them:
+
+<Steps>
+  <Step title="Open your profile">
+    Tap your avatar or name to open the **Profile** page.
+  </Step>
+  <Step title="Go to Settings">
+    Tap **Settings** in the profile menu.
+  </Step>
+  <Step title="Enable push notifications">
+    Toggle on **Enable Push Notifications** and grant permission when your browser prompts you.
+  </Step>
+</Steps>
+
+<Note>
+Push notifications require a push relay server URL configured in your site settings. If the toggle is disabled, push notifications have not been configured for your site.
+</Note>
+
+## Authentication
+
+The mobile app uses the same session-based authentication as the Frappe desk. When you visit `/hrms` without an active session, the app redirects you to the login page. Enter your Frappe username and password to log in.
+
+To log out, open your **Profile** and tap **Log Out**.

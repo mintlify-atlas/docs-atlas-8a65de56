@@ -1,0 +1,63 @@
+---
+title: "Salary slips"
+description: "View your earnings and deductions breakdown, browse salary slip history, and download slips as PDF."
+keywords: ["salary slip", "payslip", "earnings", "deductions", "net pay", "mobile"]
+---
+
+The **Salary** tab gives you access to your salary slips from your mobile browser. You can view the earnings and deductions breakdown for any period and download slips as a PDF.
+
+## Salary slips dashboard
+
+Tap **Salary** in the bottom tab bar to open the salary slips dashboard.
+
+At the top of the screen you see your **Year to Date** gross pay figure — the total gross salary accumulated from the start of the current payroll year to the most recently submitted slip.
+
+Below that is a **Payroll Period** selector. It defaults to the most recent payroll period for your company. Change it to browse slips from earlier periods.
+
+The list below the selector shows all submitted salary slips for the selected payroll period, ordered by end date (most recent first). Each row displays:
+
+- The slip's date range
+- **Gross Pay**
+- **Net Pay**
+- The currency
+
+<Note>
+Only submitted (finalised) salary slips appear in the list. Draft slips processed during an in-progress payroll run do not appear until they are submitted by your payroll administrator.
+</Note>
+
+## Viewing a salary slip
+
+Tap any salary slip in the list to open the detail view. The detail view is organised into tabs:
+
+| Tab | Contents |
+|-----|----------|
+| **Details** | Pay period, payment days, working days, and absent days |
+| **Earnings & Deductions** | Itemised earnings and deductions components with amounts |
+| **Net Pay Info** | Gross pay, total deductions, net pay, and net pay in words |
+| **Income Tax Breakup** | Monthly income tax, total income tax, and year-to-date tax |
+| **Bank Details** | Bank name, account number, and IFSC code |
+
+## Earnings and deductions breakdown
+
+Switch to the **Earnings & Deductions** tab to see the itemised breakdown.
+
+- **Earnings** lists each earning component (for example, Basic, HRA, Conveyance Allowance) with its amount for the pay period.
+- **Deductions** lists each deduction component (for example, Provident Fund, Professional Tax, TDS) with its amount.
+
+If your salary slip is in a currency different from your company's base currency, the tab shows amounts in both currencies.
+
+<Tip>
+Fields labelled with the company's base currency (for example, "Amount (INR)") are hidden when your salary currency already matches the company currency, keeping the view uncluttered.
+</Tip>
+
+## Downloading a salary slip
+
+From any open salary slip detail view, tap **Download PDF** at the bottom of the screen. The app fetches the PDF from the server and downloads it to your device using the slip name as the filename.
+
+<Note>
+The PDF is generated server-side using Frappe's print format engine. If the download button shows an error, check that the print format is configured correctly in the desktop interface.
+</Note>
+
+## Real-time updates
+
+The salary slips dashboard listens for a `hrms:update_salary_slips` socket event. When your payroll administrator submits or updates your salary slips, the list refreshes automatically without you needing to reload the page.

@@ -1,0 +1,147 @@
+---
+title: "Leave reports"
+description: "Run and interpret the Employee Leave Balance, Employee Leave Balance Summary, and Leave Ledger reports in Frappe HR."
+keywords: ["leave balance", "leave ledger", "leave reports", "leave summary", "frappe hr"]
+---
+
+Frappe HR provides three dedicated leave reports. Together they give you both a point-in-time snapshot of remaining balances and a full audit trail of every leave transaction.
+
+## Employee Leave Balance
+
+The **Employee Leave Balance** report shows the leave balance for each employee and leave type over a selected date range. It breaks the balance into its components so you can trace how the closing balance was calculated.
+
+### Filters
+
+| Filter | Description |
+|---|---|
+| From Date | Start of the period to analyse |
+| To Date | End of the period to analyse (must be after From Date) |
+| Company | Restricts to employees of the selected company |
+| Department | Optional; narrows results to a single department |
+| Employee | Optional; show a single employee only |
+| Employee Status | Active, Inactive, Left, or Suspended |
+| Consolidate Leave Types | When multiple employees are selected, collapse rows so each leave type appears once with totals |
+
+### Columns
+
+| Column | Description |
+|---|---|
+| Leave Type | The leave type (e.g., Sick Leave, Casual Leave) |
+| Employee | Employee ID |
+| Employee Name | Employee full name |
+| Opening Balance | Leave balance on the day before **From Date** |
+| New Leave(s) Allocated | Leaves allocated within the selected date range (excludes carry-forward allocations) |
+| Leave(s) Taken | Leaves consumed within the date range |
+| Leave(s) Expired | Allocations that expired within the date range |
+| Closing Balance | Opening Balance + New Allocated − Expired − Taken |
+
+### How to interpret it
+
+- A **Closing Balance** of `0` with a non-zero **Leave(s) Expired** means the allocation ran out before the employee could use it.
+- A negative **Closing Balance** is possible when leave without pay is approved beyond the available balance.
+- The **Opening Balance** reflects the carry-forwarded leaves from the previous allocation plus any unused balance that was active on the day before the from date.
+
+### Chart
+
+When you filter to a single employee, the report shows a bar chart of closing balances per leave type.
+
+<Tip>
+Run this report with **From Date** set to the first day and **To Date** set to the last day of your leave year to get an end-of-year reconciliation for each employee.
+</Tip>
+
+---
+
+## Employee Leave Balance Summary
+
+The **Employee Leave Balance Summary** report shows a single pivot table where each row is an employee and each column is a leave type. The cell value is the employee's remaining leave balance as of the selected **Date**.
+
+### Filters
+
+| Filter | Description |
+|---|---|
+| Date | The as-of date for balance calculation |
+| Company | Required |
+| Department | Optional |
+| Employee | Optional |
+| Employee Status | Active, Inactive, Left, or Suspended |
+
+### Columns
+
+The report always includes:
+
+| Column | Description |
+|---|---|
+| Employee | Employee ID |
+| Employee Name | Employee full name |
+| Department | Employee's department |
+
+Following those, the report adds one column per **Leave Type** defined in the system, in alphabetical order. Each cell shows the employee's remaining balance (i.e., allocated minus taken) for that leave type on the selected date.
+
+### How to interpret it
+
+- A value of `0` means the employee has no remaining balance for that leave type.
+- Leave types that were never allocated to an employee show `0` rather than blank.
+- Use this report before the annual leave planning cycle to see which employees have balance to carry forward.
+
+<Note>
+The **Employee Leave Balance Summary** gives you a snapshot at a single date. To see the movement over a period, use the **Employee Leave Balance** report instead.
+</Note>
+
+---
+
+## Leave Ledger
+
+The **Leave Ledger** report exposes the raw Leave Ledger Entry records that underlie all leave calculations. Every allocation, leave application, and carry-forward operation creates a Leave Ledger Entry. This report is the definitive audit trail.
+
+### Filters
+
+| Filter | Description |
+|---|---|
+| From Date / To Date | Date range for ledger entries (matches the entry's `from_date` and `to_date`) |
+| Employee | Optional; restrict to a single employee |
+| Leave Type | Optional; restrict to a single leave type |
+| Company | Optional |
+| Transaction Type | Filter by source: Leave Allocation, Leave Application, or Leave Encashment |
+| Transaction Name | Filter by the specific source document name |
+| Department | Optional; filters on the employee's department |
+| Status | Employee status filter |
+
+### Columns
+
+| Column | Description |
+|---|---|
+| Employee | Employee ID |
+| Creation Date | Date the ledger entry was created |
+| From Date | Start date of the leave period |
+| To Date | End date of the leave period |
+| Leaves | Number of leaves; positive values are credits, negative values are debits |
+| Leave Type | Leave type for the entry |
+| Transaction Type | The doctype that created the entry (e.g., Leave Allocation) |
+| Transaction Name | Link to the source document |
+| Is Carry Forward | Whether the entry represents a carry-forwarded balance |
+| Is Expired | Whether the allocation represented by this entry has expired |
+| Is Leave Without Pay | Whether this entry represents leave without pay |
+| Company | Employee's company |
+| Holiday List | Holiday list applied at the time of the transaction |
+
+### Total row
+
+When you filter to a single employee and a single leave type, the report appends a **Total Leaves** row at the bottom summing all `Leaves` values. A net-positive total means the employee has an overall credit; net-negative means more leave was consumed than credited.
+
+### How to interpret it
+
+- **Leave Allocation** entries with positive `Leaves` are new allocations.
+- **Leave Allocation** entries with `Is Carry Forward = 1` are carry-forward credits from the previous period.
+- **Leave Allocation** entries with `Is Expired = 1` and negative `Leaves` represent the expiry debit.
+- **Leave Application** entries with negative `Leaves` are approved leave applications.
+- **Leave Encashment** entries reduce the balance when leave is encashed.
+
+<Tip>
+Filter the Leave Ledger by **Transaction Type: Leave Application** and a single employee to get a complete list of every leave taken by that employee across any date range.
+</Tip>
+
+---
+
+## Exporting leave reports
+
+All three leave reports support Excel and PDF export from the **⋮** menu in the report results toolbar. The Excel export includes all visible columns; hidden columns (such as the Leave Ledger Entry ID) are excluded.

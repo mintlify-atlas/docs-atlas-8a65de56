@@ -1,0 +1,116 @@
+---
+title: "Contributing"
+description: "How to contribute code, report bugs, and submit pull requests to Frappe HR"
+---
+
+## Code of conduct
+
+Frappe HR follows a contributor code of conduct. Please read [`CODE_OF_CONDUCT.md`](https://github.com/frappe/hrms/blob/develop/CODE_OF_CONDUCT.md) in the repository before participating in the project.
+
+## Setting up your development environment
+
+Follow the [local setup guide](./local-setup) to get a working bench environment with Frappe HR installed. Make sure you can:
+
+- Access the site at `http://hrms.localhost:8080`
+- Run tests successfully (see the [testing guide](./testing))
+- Start the frontend dev server with `yarn dev` inside `frontend/`
+
+## Branching strategy
+
+Frappe HR uses the following branch naming conventions:
+
+| Type | Pattern | Example |
+|---|---|---|
+| New feature | `feat/*` | `feat/shift-swap-ui` |
+| Bug fix | `fix/*` | `fix/leave-encashment-calculation` |
+| Documentation | `docs/*` | `docs/api-reference` |
+| Refactoring | `refactor/*` | `refactor/payroll-entry-controller` |
+| Tests | `test/*` | `test/leave-allocation-edge-cases` |
+
+Create your branch from `develop`:
+
+```bash
+git checkout develop
+git pull origin develop
+git checkout -b feat/your-feature-name
+```
+
+## Commit message format
+
+Frappe HR enforces [Conventional Commits](https://www.conventionalcommits.org/) via `commitlint`. Every commit message must follow the format:
+
+```
+<type>: <subject>
+```
+
+Allowed types (from `commitlint.config.js`):
+
+| Type | When to use |
+|---|---|
+| `feat` | A new feature |
+| `fix` | A bug fix |
+| `docs` | Documentation changes only |
+| `style` | Formatting, whitespace — no logic change |
+| `refactor` | Code restructuring without feature change or bug fix |
+| `test` | Adding or updating tests |
+| `perf` | Performance improvements |
+| `ci` | CI/CD configuration changes |
+| `build` | Build system or dependency changes |
+| `chore` | Routine maintenance tasks |
+| `revert` | Reverts a previous commit |
+| `patch` | Small patches not covered by other types |
+
+Examples:
+
+```
+feat: add geolocation capture to employee checkin
+fix: incorrect HRA exemption when salary structure changes mid-period
+docs: add regional overrides guide
+test: cover leave encashment with carry-forward scenarios
+```
+
+The `subject` must not be empty and the `type` must be lowercase.
+
+## Running tests before submitting
+
+Always run the relevant tests before opening a pull request:
+
+```bash
+# Run all Frappe HR tests
+bench --site hrms.localhost run-tests --app hrms
+
+# Run tests for a specific module
+bench --site hrms.localhost run-tests --module hrms.hr.doctype.leave_application.test_leave_application
+```
+
+See the [testing guide](./testing) for more detail on writing and running tests.
+
+## Pull request checklist
+
+Before you open a PR, confirm the following:
+
+- [ ] Your branch is based on `develop`, not `main`
+- [ ] All existing tests pass
+- [ ] You have added tests for new behaviour
+- [ ] Commit messages follow the Conventional Commits format
+- [ ] You have updated documentation if the feature changes user-visible behaviour
+- [ ] There are no merge conflicts with `develop`
+
+Review the full [Pull Request Requirements](https://github.com/frappe/erpnext/wiki/Contribution-Guidelines) on the ERPNext wiki for additional guidelines that apply to the Frappe ecosystem.
+
+## Issue guidelines
+
+Before opening an issue:
+
+1. Search existing issues to avoid duplicates.
+2. Use the issue templates provided in the repository.
+3. Include clear reproduction steps for bugs, including Frappe and ERPNext versions (`bench version`).
+4. For feature requests, explain the use case and expected behaviour.
+
+Refer to the [Issue Guidelines](https://github.com/frappe/erpnext/wiki/Issue-Guidelines) on the ERPNext wiki.
+
+## Reporting security vulnerabilities
+
+Do **not** open a public GitHub issue for security vulnerabilities. Report them privately at [https://erpnext.com/security](https://erpnext.com/security).
+
+The Frappe security team will acknowledge your report, investigate, and coordinate a fix and disclosure timeline with you.

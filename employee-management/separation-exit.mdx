@@ -1,0 +1,155 @@
+---
+title: "Separation and exit"
+description: "Manage employee separations with offboarding checklists, exit interviews, and full and final settlement."
+keywords: ["employee separation", "exit interview", "full and final statement", "offboarding", "relieving date", "FnF"]
+---
+
+When an employee leaves your organisation, Frappe HR guides you through three interconnected steps: running a separation checklist (**Employee Separation**), conducting an **Exit Interview**, and settling outstanding dues with a **Full and Final Statement**.
+
+## Employee separation
+
+**Employee Separation** mirrors the onboarding workflow. It creates a project and tasks for offboarding activities so that every departure is handled consistently.
+
+### Key fields
+
+| Field | Description |
+|---|---|
+| `employee` | The departing employee |
+| `resignation_letter_date` | Auto-fetched from the employee's record |
+| `boarding_begins_on` | The date from which separation task dates are calculated |
+| `employee_separation_template` | A pre-configured template of separation activities |
+| `boarding_status` | `Pending`, `In Process`, or `Completed` — updated automatically as tasks are completed |
+| `activities` | The offboarding checklist, each row linked to a Frappe **Task** |
+| `exit_interview` | A text field for recording a brief exit interview summary inline |
+
+### Setting up a separation template
+
+An **Employee Separation Template** works identically to an onboarding template. You define activities with assignees, start offsets, and durations. Go to **HR > Employee Lifecycle > Employee Separation Template** to create one.
+
+### Running a separation
+
+<Steps>
+  <Step title="Create the document">
+    Go to **HR > Employee Lifecycle > Employee Separation** and click **New**. Select the **Employee**. The employee's department, designation, grade, and resignation letter date are fetched automatically.
+  </Step>
+  <Step title="Select a template">
+    Select an **Employee Separation Template** to populate the **Separation Activities** table, or add activities manually.
+  </Step>
+  <Step title="Set the separation begins on date">
+    Enter **Separation Begins On**. Task start dates are calculated relative to this date, with holidays skipped.
+  </Step>
+  <Step title="Submit">
+    Submit the document. Frappe HR creates a project and a task for each activity row and assigns them to the specified users or roles. If **Notify users by email** is checked, assignees receive email notifications.
+  </Step>
+  <Step title="Track completion">
+    As team members complete their tasks, the project completion percentage rises and `boarding_status` updates from `Pending` to `In Process` to `Completed` automatically.
+  </Step>
+</Steps>
+
+<Note>
+Cancelling a submitted **Employee Separation** deletes the linked project and all associated tasks.
+</Note>
+
+## Exit interview
+
+The **Exit Interview** document records the outcome of a formal exit conversation with the departing employee.
+
+### Prerequisites
+
+Before you can save an **Exit Interview**, you must set a `relieving_date` on the employee record. Frappe HR validates this and throws an error if it is missing.
+
+### Key fields
+
+| Field | Description |
+|---|---|
+| `employee` | The departing employee |
+| `date` | The scheduled or completed interview date |
+| `status` | `Pending`, `Scheduled`, `Completed`, or `Cancelled` |
+| `interviewers` | One or more users conducting the interview |
+| `ref_doctype` / `reference_document_name` | Optional link to an exit questionnaire document (e.g. a web form response) |
+| `interview_summary` | Free-text summary of the interview |
+| `employee_status` | Final decision: `Employee Retained` or `Exit Confirmed` |
+
+<Note>
+Only one active **Exit Interview** can exist per employee at a time. Creating a duplicate raises a `DuplicateEntryError`.
+</Note>
+
+### Exit questionnaire
+
+You can send a questionnaire to the employee by email before or during the interview:
+
+1. Configure **Exit Questionnaire Web Form** and **Exit Questionnaire Notification Template** in **HR Settings**.
+2. Select one or more exit interview records in the list view and click **Send Exit Questionnaire**.
+3. Frappe HR sends the questionnaire link to the employee's email address and marks `questionnaire_email_sent` as checked.
+
+### Submitting an exit interview
+
+You can only submit an **Exit Interview** when its `status` is `Completed`. On submission, Frappe HR records the interview date (`held_on`) on the employee record.
+
+## Full and final statement
+
+A **Full and Final Statement** consolidates everything the company owes the employee and everything the employee owes the company before the final payout.
+
+### Prerequisites
+
+The employee must have a `relieving_date` set. Frappe HR validates this before saving and throws an error if it is absent.
+
+### Key fields
+
+| Field | Description |
+|---|---|
+| `employee` | The departing employee |
+| `transaction_date` | The date of the settlement transaction |
+| `status` | `Unpaid` (default), `Paid`, or `Cancelled` |
+| `payables` | Amounts the company owes the employee |
+| `receivables` | Amounts the employee owes the company |
+| `assets_allocated` | Assets currently held by the employee |
+| `total_payable_amount` | Sum of all payable rows |
+| `total_receivable_amount` | Sum of all receivable rows plus asset recovery costs |
+
+### Payables and receivables
+
+When you create a **Full and Final Statement**, Frappe HR automatically fetches:
+
+**Payables** (amounts owed to the employee):
+- Withheld **Salary Slips** (status `Withheld`)
+- Outstanding **Gratuity**
+- Unpaid **Expense Claims**
+- Pending **Bonus** (Additional Salary)
+- **Leave Encashment** dues
+
+**Receivables** (amounts owed by the employee):
+- Unrecovered **Employee Advances**
+- Outstanding **Loans** (if the Lending app is installed)
+
+Each row has a `status` field — `Unsettled` or `Settled`. You must set all rows to `Settled` before you can submit the document.
+
+### Assets allocated
+
+Frappe HR scans all **Asset Movement** records to find assets currently held by the employee (inward movements that have not been transferred out). For each asset still with the employee, you choose an action:
+
+- **Return** — the employee returns the asset before their last day
+- **Recover Cost** — the asset cost is deducted from the final payout
+
+All assets with action **Return** must have their status updated to indicate they have been returned before you can submit.
+
+### Submitting and paying
+
+<Steps>
+  <Step title="Settle all rows">
+    Mark every row in **Payables** and **Receivables** as `Settled` and confirm all returnable assets have been returned.
+  </Step>
+  <Step title="Submit the document">
+    Submit the **Full and Final Statement**. The `status` remains `Unpaid` at this point.
+  </Step>
+  <Step title="Create a journal entry">
+    Click **Create Journal Entry**. Frappe HR generates a **Bank Entry** journal with the net payable or receivable amount. The journal entry accounts for all payable and receivable components.
+  </Step>
+  <Step title="Submit the journal entry">
+    Submit the journal entry in Frappe Accounts. Frappe HR automatically sets the **Full and Final Statement** status to `Paid` and updates the payment status on linked Gratuity and Leave Encashment records.
+  </Step>
+</Steps>
+
+<Warning>
+Never mark an employee as **Left** before completing the **Full and Final Statement**. Setting the status to `Paid` confirms all dues are cleared.
+</Warning>

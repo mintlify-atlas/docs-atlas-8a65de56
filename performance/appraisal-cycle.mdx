@@ -1,0 +1,130 @@
+---
+title: "Appraisal cycle"
+description: "Set up a time-boxed appraisal cycle, add appraisees with their templates, and bulk-create appraisals in one click."
+keywords: ["appraisal cycle", "appraisal template", "appraisee", "KRA evaluation", "performance cycle"]
+---
+
+An **Appraisal Cycle** is the container for a complete performance review period. It defines the evaluation window, the employees under review, and the scoring method. All **Goals**, **Appraisals**, and **Employee Performance Feedback** documents are linked back to a cycle.
+
+## Appraisal Template
+
+Before creating a cycle, set up the **Appraisal Template** that defines what is evaluated.
+
+### Template fields
+
+| Field | Description |
+|---|---|
+| **Appraisal Template Title** | Unique name for the template (e.g., `Engineering IC`, `Manager`). |
+| **Description** | Optional description of the template's purpose. |
+| **KRAs** (`goals` table) | List of KRAs with their **Weightage (%)**. Weightages must total 100. |
+| **Rating Criteria** | List of criteria (from **Employee Feedback Criteria**) with weightages used for self-appraisal and feedback ratings. |
+
+### Creating a template
+
+<Steps>
+  <Step title="Open Appraisal Template">
+    Go to **HR** → **Performance** → **Appraisal Template** and click **New**.
+  </Step>
+  <Step title="Name the template">
+    Enter a unique **Appraisal Template Title**.
+  </Step>
+  <Step title="Add KRAs">
+    In the **KRAs** table, add each KRA and set its **Weightage (%)**. The total across all rows must equal 100.
+  </Step>
+  <Step title="Add rating criteria">
+    In the **Rating Criteria** table, add each **Employee Feedback Criteria** item and set its weightage. These criteria appear in both the self-appraisal and feedback forms.
+  </Step>
+  <Step title="Save">
+    Click **Save**.
+  </Step>
+</Steps>
+
+<Tip>
+Assign a default **Appraisal Template** to each **Designation** record. When you use **Get Employees** on the cycle, Frappe HR will automatically populate the correct template for each employee based on their designation.
+</Tip>
+
+## Appraisal Cycle fields
+
+| Field | Description |
+|---|---|
+| **Cycle Name** | Unique identifier for the cycle (e.g., `H1 2025`). |
+| **Company** | The company this cycle applies to. Required. |
+| **Start Date** / **End Date** | The evaluation period. Goals and appraisals inherit these dates. Required. |
+| **Status** | Read-only. `Not Started` → `In Progress` → `Completed`. |
+| **KRA Evaluation Method** | `Automated Based on Goal Progress` (default) or `Manual Rating`. Controls how goal scores are entered on appraisals. |
+| **Calculate Final Score based on Formula** | When checked, enter a custom Python expression in **Final Score Formula** using variables `goal_score`, `average_feedback_score`, and `self_appraisal_score`. |
+| **Branch / Department / Designation** | Optional filters for the **Get Employees** action. |
+| **Appraisees** | Child table listing each employee under review, with their appraisal template. |
+
+## Cycle status
+
+| Status | Meaning |
+|---|---|
+| **Not Started** | Default status when the cycle is first saved. |
+| **In Progress** | At least one appraisal exists for this cycle. |
+| **Completed** | All appraisals are submitted. Set manually by clicking **Complete Cycle**. |
+
+<Note>
+When a cycle is **Completed**, no new goals, appraisals, or feedback can be created or modified against it. To reopen the cycle, change the status back to **In Progress** directly on the document.
+</Note>
+
+## Creating an Appraisal Cycle
+
+<Steps>
+  <Step title="Open Appraisal Cycle">
+    Go to **HR** → **Performance** → **Appraisal Cycle** and click **New**.
+  </Step>
+  <Step title="Fill in the overview">
+    Enter the **Cycle Name**, select the **Company**, and set the **Start Date** and **End Date**.
+  </Step>
+  <Step title="Choose the evaluation method">
+    Set **KRA Evaluation Method**. Choose `Automated Based on Goal Progress` if employees will track goals — their goal completion percentages will flow into the appraisal score. Choose `Manual Rating` if managers will enter scores directly.
+  </Step>
+  <Step title="Configure optional formula">
+    If you want a custom final score calculation, enable **Calculate Final Score based on Formula** and enter your formula. Leave this unchecked to use the default average of the three score components.
+  </Step>
+  <Step title="Save the cycle">
+    Click **Save** before adding employees.
+  </Step>
+</Steps>
+
+## Adding appraisees
+
+You can add employees to the cycle manually or automatically.
+
+### Automatic — Get Employees
+
+<Steps>
+  <Step title="Set filters">
+    On the **Applicable For** tab, set optional filters: **Branch**, **Department**, and/or **Designation**.
+  </Step>
+  <Step title="Click Get Employees">
+    Click the **Get Employees** button. Frappe HR fetches all active employees matching the filters and populates the **Appraisees** table. Each row shows the employee's **Name**, **Department**, **Designation**, **Branch**, and the **Appraisal Template** pulled from their designation.
+  </Step>
+  <Step title="Fix missing templates">
+    If any employee's designation does not have an **Appraisal Template** assigned, a warning appears. Set the template directly in the **Appraisees** table or on the **Designation** record.
+  </Step>
+</Steps>
+
+### Manual — Add rows directly
+
+Click **Add Row** in the **Appraisees** table and select each employee. Set the **Appraisal Template** for each row.
+
+<Note>
+Every appraisee must have an **Appraisal Template** before you can create appraisals. Frappe HR will raise an error if any template is missing.
+</Note>
+
+## Bulk creating appraisals
+
+Once the appraisee list is complete and every employee has an **Appraisal Template**, click **Create Appraisals**.
+
+- Frappe HR creates one **Appraisal** per employee, skipping any that already exist (no duplicates).
+- If there are more than 30 appraisees, creation is queued as a background job. A notification appears when it is complete.
+- Each appraisal is pre-populated with the KRAs and rating criteria from the employee's template.
+
+## Completing the cycle
+
+When all appraisals are submitted, click **Complete Cycle** on the **Appraisal Cycle** document.
+
+- If any appraisals are still in **Draft** status, Frappe HR will show an error with a link to the unsubmitted documents.
+- Once completed, the cycle status changes to `Completed` and no further changes can be made to linked documents.

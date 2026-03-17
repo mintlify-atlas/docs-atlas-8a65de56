@@ -1,0 +1,62 @@
+---
+title: Leave & Attendance overview
+description: Manage employee leave entitlements, track daily attendance, and configure shift schedules in Frappe HR.
+---
+
+Frappe HR provides a complete leave and attendance management system. You can define the types of leave your organization offers, group them into policies, allocate them to employees, and track how employees use their time — from manual attendance entry through to fully automated shift-based clock-in/out processing.
+
+The system is built around a chain of dependencies: you define **Leave Types** first, group them into **Leave Policies**, assign those policies to employees via **Leave Policy Assignments**, and the system (or your HR team) creates **Leave Allocations** that employees then consume through **Leave Applications**.
+
+Attendance flows separately but connects back to leave — an approved leave application automatically marks the corresponding attendance records as *On Leave*.
+
+## Key documents
+
+<CardGroup cols={2}>
+  <Card title="Leave Types" icon="tag" href="/leave-attendance/leave-types">
+    Define casual, sick, earned, compensatory, and optional leave categories with carry-forward, encashment, and accrual rules.
+  </Card>
+  <Card title="Leave Policies" icon="file-contract" href="/leave-attendance/leave-policy">
+    Bundle leave types with annual allocations into a reusable policy, then assign that policy to employees or groups via Leave Policy Assignments.
+  </Card>
+  <Card title="Leave Allocation" icon="calendar-plus" href="/leave-attendance/leave-allocation">
+    Allocate leave days to employees manually or automatically. Manage carry-forward balances and earned leave accrual schedules.
+  </Card>
+  <Card title="Leave Application" icon="paper-plane" href="/leave-attendance/leave-application">
+    Employees apply for leave, approvers review and approve, and the system deducts from the balance and marks attendance automatically.
+  </Card>
+  <Card title="Attendance" icon="clipboard-check" href="/leave-attendance/attendance">
+    Mark attendance manually, via employee check-ins, or through attendance requests for Work From Home and On Duty scenarios.
+  </Card>
+  <Card title="Shift Management" icon="clock" href="/leave-attendance/shift-management">
+    Configure shift types, assign shifts to employees, and enable auto-attendance processing from biometric or mobile check-in data.
+  </Card>
+</CardGroup>
+
+## How the pieces fit together
+
+```
+Leave Type
+    └── Leave Policy (annual allocation per type)
+            └── Leave Policy Assignment (employee + period)
+                    └── Leave Allocation (ledger record)
+                            └── Leave Application (consumption)
+                                    └── Attendance (On Leave status)
+```
+
+For attendance, the parallel chain is:
+
+```
+Shift Type (schedule + auto-attendance config)
+    └── Shift Assignment (employee + date range)
+            └── Employee Checkin (IN/OUT logs)
+                    └── Attendance (auto-marked by scheduler)
+```
+
+## Roles
+
+| Role | Typical actions |
+|------|-----------------|
+| **Employee** | Submit leave applications, view their own leave balance and attendance |
+| **Leave Approver** | Approve or reject leave applications |
+| **HR User** | Create allocations, manage attendance, process encashments |
+| **HR Manager** | Full access to all leave and attendance documents |

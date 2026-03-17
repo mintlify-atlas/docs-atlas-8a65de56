@@ -1,0 +1,208 @@
+---
+title: "Interviews"
+description: "Schedule and manage interview rounds for job applicants"
+keywords: ["interview", "interview round", "interview feedback", "skill assessment", "interviewer", "interview reminder"]
+---
+
+Frappe HR's interview module lets you define reusable **Interview Round** configurations, schedule **Interview** sessions against job applicants, and collect structured **Interview Feedback** from each interviewer. Automated reminders keep interviewers on track without manual follow-up.
+
+## Interview Round configuration
+
+An **Interview Round** is a reusable template that defines who interviews candidates, what skills to evaluate, and what rating to aim for. Create one round per stage in your hiring process (e.g., Technical Screening, Culture Fit, Leadership Panel).
+
+### Interview Round fields
+
+| Field | Description |
+|---|---|
+| `round_name` | Unique name for this round. Used as the document's identifier. Required. |
+| `interview_type` | Categorises the round (e.g., Technical, HR, Managerial). Links to **Interview Type** master. |
+| `designation` | Restricts this round to candidates applying for a specific designation. Leave blank to apply to all designations. |
+| `interviewers` | Default list of users who conduct this round. Copied to each scheduled interview. |
+| `expected_average_rating` | Target average rating (0–5 stars). Shown on the interview form as a benchmark. |
+| `expected_skill_set` | Table of skills to assess in this round. Required. Each row has a **Skill** name. |
+
+### Creating an Interview Round
+
+<Steps>
+  <Step title="Open the form">
+    Go to **HR → Recruitment → Interview Round** and click **New**.
+  </Step>
+  <Step title="Name the round">
+    Enter a **Round Name** (e.g., `Technical Round 1`). This name must be unique.
+  </Step>
+  <Step title="Set the interviewers">
+    Add the default interviewers in the **Interviewers** table. Users must have the **Interviewer** role to appear in search results.
+  </Step>
+  <Step title="Define the expected skill set">
+    Add at least one row to **Expected Skillset**. Each row names a skill the interviewer will rate during the session.
+  </Step>
+  <Step title="Set the expected average rating">
+    Enter an **Expected Average Rating** to give interviewers a target benchmark.
+  </Step>
+  <Step title="Save">
+    Click **Save**.
+  </Step>
+</Steps>
+
+## Interview document
+
+An **Interview** is a submittable document that records one scheduled session between a candidate and a set of interviewers.
+
+### Interview fields
+
+| Field | Description |
+|---|---|
+| `interview_round` | The **Interview Round** this session follows. Required. |
+| `job_applicant` | The candidate being interviewed. Required. |
+| `job_opening` | Fetched automatically from the applicant's linked job opening. Read-only. |
+| `designation` | Fetched from the interview round. Validated against the applicant's designation. |
+| `scheduled_on` | Date of the interview session. Required. Set only once — use **Reschedule** to change it. |
+| `from_time` / `to_time` | Start and end time of the session. Required. |
+| `status` | Current state of the interview. See [Interview statuses](#interview-statuses) below. |
+| `interview_details` | Table of interviewers for this session. Pre-filled from the round but editable. |
+| `expected_average_rating` | Copied from the round. Read-only benchmark. |
+| `average_rating` | Calculated from submitted feedback. Read-only. |
+| `interview_summary` | Free-text summary of the overall interview outcome. |
+
+### Interview statuses
+
+| Status | Meaning |
+|---|---|
+| **Pending** | Scheduled but not yet held |
+| **Under Review** | Interview has been held; awaiting feedback from interviewers |
+| **Cleared** | Candidate passed this round |
+| **Rejected** | Candidate did not pass this round |
+| **Cancelled** | Interview was cancelled |
+
+<Note>
+Only interviews with **Cleared** or **Rejected** status can be submitted. Attempting to submit a **Pending** or **Under Review** interview raises an error.
+</Note>
+
+### Scheduling an Interview
+
+<Steps>
+  <Step title="Create the interview">
+    Go to **HR → Recruitment → Interview** and click **New**, or use the **Create Interview** button on a **Job Applicant** form and select the round.
+  </Step>
+  <Step title="Select the round and applicant">
+    Choose the **Interview Round** and **Job Applicant**. Frappe HR validates that the round's designation matches the applicant's designation.
+  </Step>
+  <Step title="Set the schedule">
+    Enter **Scheduled On**, **From Time**, and **To Time**.
+  </Step>
+  <Step title="Review interviewers">
+    The **Interviewers** table is pre-filled from the round. Add or remove interviewers as needed.
+  </Step>
+  <Step title="Save">
+    Click **Save**. The interview is created with status **Pending**.
+  </Step>
+</Steps>
+
+### Rescheduling an interview
+
+To change the date or time of a saved interview, click **Reschedule Interview** on the form. Enter the new **Scheduled On**, **From Time**, and **To Time**. Frappe HR sends a reschedule notification email to all interviewers and the candidate automatically.
+
+### Submitting an interview
+
+When all feedback is in and you have reviewed results:
+
+1. Set **Status** to **Cleared** or **Rejected**.
+2. Add an **Interview Summary** describing the overall outcome.
+3. Click **Submit**.
+
+After submission, Frappe HR prompts you to update the **Job Applicant** status to match the interview outcome (**Accepted** for Cleared, **Rejected** for Rejected).
+
+<Note>
+Each applicant can appear in the same interview round only once. Submitting a duplicate interview raises a validation error.
+</Note>
+
+## Interview Feedback
+
+Each interviewer submits their own **Interview Feedback** document after the session. Only users with the **Interviewer** role can create and submit feedback.
+
+### Interview Feedback fields
+
+| Field | Description |
+|---|---|
+| `interview` | The **Interview** this feedback is for. Required. |
+| `interview_round` | Fetched from the interview. Read-only. |
+| `job_applicant` | Fetched from the interview. Read-only. |
+| `interviewer` | The user submitting the feedback. Required. |
+| `skill_assessment` | Table of skills from the round's **Expected Skillset**, each rated by the interviewer. Required. |
+| `average_rating` | Calculated average of all skill ratings. Read-only. |
+| `feedback` | Free-text written feedback from the interviewer. |
+| `result` | Overall outcome: **Cleared** or **Rejected**. Required. |
+
+### Submitting feedback
+
+Interviewers can submit feedback directly from the **Interview** form using the **Feedback** tab, or by creating a new **Interview Feedback** document.
+
+<Steps>
+  <Step title="Open the Feedback tab">
+    On the **Interview** form, click the **Feedback** tab. A structured feedback form is rendered inline.
+  </Step>
+  <Step title="Rate each skill">
+    For each skill in the **Skill Assessment** table, enter a star rating (0–5). The **Average Rating** updates automatically.
+  </Step>
+  <Step title="Write feedback">
+    Add written observations in the **Feedback** field.
+  </Step>
+  <Step title="Set the result">
+    Select **Cleared** or **Rejected** in the **Result** field.
+  </Step>
+  <Step title="Submit">
+    Click **Submit Feedback**. The feedback is saved and submitted. The interview's **Obtained Average Rating** updates to reflect the average across all submitted feedback documents.
+  </Step>
+</Steps>
+
+<Tip>
+The **Feedback** tab on the **Interview** form also shows a skill-wise average rating chart aggregated across all submitted feedback documents for that session.
+</Tip>
+
+## Automated reminders
+
+Frappe HR sends two types of automated email reminders to keep interviewers and candidates informed.
+
+### Interview reminders
+
+A scheduled task (`send_interview_reminder`) runs on every "all" scheduler event (every 30 minutes by default). It sends a reminder email to all interviewers and the candidate for any interview that:
+
+- Has **Status** = **Pending**
+- Has **Reminded** = unchecked
+- Is scheduled within the next `remind_before` hours (configured in **HR Settings**)
+
+To enable this feature:
+
+1. Go to **HR → Settings → HR Settings**.
+2. Check **Send Interview Reminder**.
+3. Select an **Interview Reminder Template** (an **Email Template** document).
+4. Set the **Remind Before** time (e.g., `01:00:00` for 1 hour before the interview).
+5. Optionally set a **Hiring Sender Email** to use as the from address.
+
+### Daily feedback reminders
+
+A second scheduled task (`send_daily_feedback_reminder`) runs once a day. It sends a reminder to interviewers who have not yet submitted feedback for interviews that:
+
+- Have **Status** = **Under Review**
+- Were scheduled on or before today at or before the current time
+
+To enable this feature:
+
+1. Go to **HR → Settings → HR Settings**.
+2. Check **Send Interview Feedback Reminder**.
+3. Select a **Feedback Reminder Notification Template**.
+
+<Note>
+Feedback reminders are only sent to interviewers who have not yet submitted a feedback document for that session. Interviewers who have already submitted feedback are excluded from the recipient list.
+</Note>
+
+## Calendar view
+
+Interviews support a **Calendar** view in addition to the standard list view. Open **HR → Recruitment → Interview** and switch to the calendar to see all scheduled interviews color-coded by status:
+
+| Color | Status |
+|---|---|
+| Light orange | Pending |
+| Light blue | Under Review |
+| Light green | Cleared |
+| Light red | Rejected |

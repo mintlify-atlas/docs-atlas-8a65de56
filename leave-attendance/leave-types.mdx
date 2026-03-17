@@ -1,0 +1,117 @@
+---
+title: Leave types
+description: Configure the categories of leave your organization offers, including rules for carry-forward, earned accrual, and encashment.
+---
+
+A **Leave Type** is the master configuration record for a category of leave — for example, *Casual Leave*, *Sick Leave*, or *Earned Leave*. Every **Leave Allocation** and **Leave Application** references a leave type, so you must create your leave types before you can set up any leave policies or allocations.
+
+## Creating a leave type
+
+<Steps>
+  <Step title="Open Leave Type">
+    Go to **HR > Leave Management > Leave Type > New**.
+  </Step>
+  <Step title="Name the type">
+    Enter a unique **Leave Type Name**. This name appears on leave applications and reports, so choose something descriptive (for example, *Annual Leave* or *Sick Leave*).
+  </Step>
+  <Step title="Set allocation limits">
+    - **Maximum Leave Allocation Allowed per Leave Period** — the highest number of days that can be allocated in any single leave period. Leave this at zero to impose no limit.
+    - **Maximum Consecutive Leaves Allowed** — blocks applications exceeding this many consecutive days.
+    - **Allow Leave Application After (Working Days)** — minimum working days since the employee's joining date before they can apply for this leave type.
+  </Step>
+  <Step title="Configure behavior flags">
+    Set the check fields that describe how this leave type behaves (see the reference table below).
+  </Step>
+  <Step title="Save">
+    Click **Save**. The leave type is immediately available for use in leave policies and allocations.
+  </Step>
+</Steps>
+
+## Behavior fields
+
+| Field | What it controls |
+|-------|------------------|
+| **Is Carry Forward** | Unused leaves roll over into the next allocation period. |
+| **Is Leave Without Pay** | Days on this leave type reduce the employee's salary. Mutually exclusive with **Is Partially Paid Leave**. |
+| **Is Partially Paid Leave** | The employee receives a fraction of daily salary per leave day. Set **Fraction of Daily Salary per Leave** (e.g., `0.5` for 50% pay). |
+| **Is Optional Leave** | The leave falls on an optional holiday; employees opt in rather than being entitled automatically. |
+| **Is Compensatory** | Leave granted in exchange for working on a holiday or rest day. |
+| **Is Earned Leave** | Leave that accrues over time rather than being allocated in a lump sum at the start of the period. |
+| **Allow Negative Balance** | Applications are accepted even when the balance would go below zero. |
+| **Allow Over Allocation** | Allows allocating more days than the number of days in the allocation period. |
+| **Include holidays within leaves as leaves** | When checked, holidays that fall within the leave period count as leave days. |
+
+## Common leave type examples
+
+<Tabs>
+  <Tab title="Casual Leave">
+    Discretionary leave for personal matters.
+
+    - **Is Carry Forward**: unchecked (expires at end of period)
+    - **Maximum Leave Allocation Allowed per Leave Period**: 12 (typical)
+    - No special flags required
+  </Tab>
+  <Tab title="Sick Leave">
+    Leave taken for illness or medical appointments.
+
+    - **Allow Negative Balance**: consider checking to avoid blocking unwell employees
+    - **Is Carry Forward**: often unchecked
+    - **Allow Leave Application After (Working Days)**: 0 (available from day one)
+  </Tab>
+  <Tab title="Earned Leave">
+    Leave that accrues incrementally throughout the year.
+
+    - **Is Earned Leave**: checked
+    - **Earned Leave Frequency**: Monthly, Quarterly, Half-Yearly, or Yearly
+    - **Rounding**: 0.25, 0.5, or 1.0 (how fractional accrued days are rounded)
+    - **Allocate on Day**: First Day, Last Day, or Date of Joining
+    - **Is Carry Forward**: typically checked so unused earned leave rolls over
+  </Tab>
+  <Tab title="Compensatory Leave">
+    Leave earned by working on a holiday.
+
+    - **Is Compensatory**: checked
+    - Employees submit a **Compensatory Leave Request** to trigger the allocation; you do not allocate this type manually.
+  </Tab>
+  <Tab title="Optional Leave">
+    Company-designated optional holidays that employees may choose to take.
+
+    - **Is Optional Leave**: checked
+    - Requires an **Optional Holiday List** to be set on the active **Leave Period**.
+  </Tab>
+</Tabs>
+
+## Carry-forward rules
+
+When **Is Carry Forward** is enabled, two additional fields appear:
+
+- **Maximum Carry Forwarded Leaves** — caps the number of unused leaves that roll into the next period. For example, if an employee has 15 unused days but the cap is 10, only 10 carry forward.
+- **Expire Carry Forwarded Leaves (Days)** — the number of days after the new allocation starts before the carried-forward balance expires. If you enter `90`, carried-forward leaves expire 90 days into the new period.
+
+<Note>
+When you create a new **Leave Allocation** with **Add unused leaves from previous allocations** checked, Frappe HR automatically calculates the carried-forward balance and records it as a separate ledger entry with its own expiry date.
+</Note>
+
+## Encashment settings
+
+To allow employees to convert unused leave into cash, expand the **Encashment** section:
+
+| Field | Purpose |
+|-------|---------|
+| **Allow Encashment** | Enables **Leave Encashment** requests for this leave type. |
+| **Earning Component** | The salary component used to calculate the encashment payout (must be a component in the employee's salary structure). |
+| **Maximum Encashable Leaves** | Upper limit on how many days can be encashed in a single request. |
+| **Non-Encashable Leaves** | Days that are always excluded from encashment. For example, with a balance of 10 and 4 non-encashable leaves, only 6 days can be encashed. |
+
+<Warning>
+The **Earning Component** must exist in the employee's active salary structure, otherwise the encashment amount calculation will fail at the time the **Leave Encashment** document is submitted.
+</Warning>
+
+## Interaction with allocations
+
+When you allocate a leave type to an employee:
+
+- If **Maximum Leave Allocation Allowed per Leave Period** is set, Frappe HR sums all submitted allocations for that employee and leave type within the leave period and blocks any allocation that would exceed the limit.
+- If **Is Leave Without Pay** is checked, the leave type cannot be allocated at all — LWP leaves are deducted automatically when an employee applies, without a prior allocation.
+- If **Is Compensatory** is checked, allocations are created automatically when a **Compensatory Leave Request** is approved.
+- If **Is Earned Leave** is checked, the allocation record is created by the **Leave Policy Assignment** and individual accruals are posted by the hourly scheduler according to the frequency and rounding settings.

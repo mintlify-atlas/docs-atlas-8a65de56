@@ -1,0 +1,115 @@
+---
+title: Gratuity
+description: Configure gratuity rules, calculate end-of-service gratuity when an employee separates, and integrate with the Full and Final Statement.
+keywords: [gratuity, end of service, gratuity rule, years of service, full and final, separation]
+---
+
+Gratuity is an end-of-service benefit paid to employees upon separation. Frappe HR calculates gratuity based on the employee's years of service and a configurable **Gratuity Rule**.
+
+## Gratuity Rule
+
+A **Gratuity Rule** defines the calculation method. Go to **Payroll > Gratuity Rule > New**.
+
+### Fields
+
+| Field | Description |
+|---|---|
+| **Calculate Gratuity Amount Based On** | *Current Slab* — apply the rate of the slab that matches total experience. *Sum of all previous slabs* — sum contributions from every slab up to the employee's total experience. |
+| **Work Experience Calculation Method** | *Round off Work Experience* — round years to the nearest integer. *Take Exact Completed Years* — use the floor of decimal years. *Manual* — enter years of service manually on the gratuity document. |
+| **Total Working Days Per Year** | Days per year used to convert total days worked into years (default: 365). |
+| **Minimum Year for Gratuity** | Employees must complete at least this many years to be eligible. |
+| **Applicable Earnings Component** | The salary components (from the last salary slip) whose amounts are used as the base for gratuity calculation. |
+| **Current Work Experience (slabs)** | Table defining the fraction of applicable earnings per slab: **From Year**, **To Year**, **Fraction of Applicable Earnings**. Set both to `0` for an unlimited slab. |
+
+### Example: Indian gratuity (Payment of Gratuity Act)
+
+| From Year | To Year | Fraction |
+|---|---|---|
+| 0 | 0 | 0.0192 |
+
+- **Method**: Sum of all previous slabs
+- **Total Working Days Per Year**: 26 (as per the Act)
+- **Minimum Year for Gratuity**: 5
+- **Applicable Component**: Basic Salary
+
+This gives: `Basic × (total_working_days / 26) × 0.0192`, equivalent to `(Basic / 26) × 15 × years_of_service`.
+
+## Gratuity calculation formula
+
+For the **Current Slab** method:
+
+```
+Gratuity = total_applicable_earnings × experience_years × fraction_of_applicable_earnings
+```
+
+For the **Sum of all previous slabs** method:
+
+```
+Gratuity = Σ (slab_years × total_applicable_earnings × fraction_of_applicable_earnings)
+```
+
+Where `total_applicable_earnings` is the sum of the **Applicable Earnings Component** amounts from the employee's most recent submitted salary slip.
+
+Work experience is computed as:
+
+```
+work_experience = (relieving_date - date_of_joining - non_working_days) / total_working_days_per_year
+```
+
+Non-working days are LWP days (if **Payroll Based On = Leave**) or absent days (if **Payroll Based On = Attendance**).
+
+## Creating a gratuity document
+
+Go to **Payroll > Gratuity > New**.
+
+### Fields
+
+| Field | Description |
+|---|---|
+| **Employee** | The separating employee. The employee must have a **Relieving Date** set. |
+| **Gratuity Rule** | The rule to apply for this employee |
+| **Posting Date** | Date of the gratuity document |
+| **Current Work Experience** | Auto-calculated from joining and relieving dates (or entered manually) |
+| **Total Amount** | Auto-calculated gratuity amount (read-only) |
+| **Pay via Salary Slip** | Enable to disburse through a salary slip; disable to make a direct GL entry |
+| **Payroll Date** | (Pay via Salary Slip) The payroll cycle date for disbursement |
+| **Salary Component** | (Pay via Salary Slip) The earning component used for the payout |
+| **Expense Account** | (Direct payment) Account to debit the gratuity expense |
+| **Payable Account** | (Direct payment) Account to credit the gratuity liability |
+| **Mode of Payment** | (Direct payment) Payment method |
+| **Cost Center** | Cost center for the accounting entry |
+
+<Note>
+The employee must have a submitted salary slip in the system. The gratuity amount is calculated from the applicable component amounts in the **last submitted salary slip**.
+</Note>
+
+## Submitting and disbursing
+
+<Steps>
+  <Step title="Save and review">
+    Save the gratuity document to trigger automatic calculation of **Current Work Experience** and **Total Amount**. Review the computed values.
+  </Step>
+  <Step title="Submit">
+    Click **Submit**.
+    - If **Pay via Salary Slip** is enabled, an **Additional Salary** record is created automatically. The gratuity amount appears in the employee's salary slip for the specified **Payroll Date**.
+    - If **Pay via Salary Slip** is disabled, GL entries are posted immediately: the **Expense Account** is debited and the **Payable Account** is credited.
+  </Step>
+  <Step title="Record payment (direct payment only)">
+    After submitting without salary slip, create a payment entry against the gratuity document to mark the liability as paid.
+  </Step>
+</Steps>
+
+## Gratuity statuses
+
+| Status | Meaning |
+|---|---|
+| *Draft* | Not yet submitted |
+| *Unpaid* | Submitted; payment not yet received |
+| *Paid* | Submitted; paid amount equals total amount |
+| *Cancelled* | Cancelled; GL entries reversed |
+
+## Integration with Full and Final Statement
+
+When processing an employee's Full and Final (F&F) settlement, the gratuity document links to the settlement workflow. The F&F process pulls outstanding gratuity amounts and includes them in the final payment calculation along with leave encashment, pending expense claims, and any other dues.
+
+Ensure the gratuity document is submitted before initiating the Full and Final Statement so the amount is included in the settlement.

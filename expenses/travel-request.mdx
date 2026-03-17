@@ -1,0 +1,114 @@
+---
+title: "Travel requests"
+description: "Plan and approve business travel before the trip begins, with detailed itineraries and cost estimates."
+keywords: ["travel request", "travel itinerary", "travel request costing", "business travel", "expense claim", "employee advance"]
+---
+
+# Travel requests
+
+A **Travel Request** is a pre-trip approval document. The employee describes the purpose of travel, lists a detailed itinerary, and estimates costs before any money is spent. Managers review and approve the request, and the document then serves as the basis for **Employee Advance** disbursements and post-trip **Expense Claims**.
+
+## Creating a travel request
+
+Go to **HR > Expense Claims > Travel Request > New**.
+
+### Header fields
+
+| Field | Description |
+|---|---|
+| **Travel Type** | **Domestic** or **International** |
+| **Purpose of Travel** | Link to a **Purpose of Travel** master record |
+| **Travel Funding** | Funding arrangement: **Require Full Funding**, **Fully Sponsored**, or **Partially Sponsored, Require Partial Funding** |
+| **Copy of Invitation/Announcement** | Attach supporting documents (e.g. conference invitations) |
+| **Details of Sponsor** | Name and location of the sponsoring organisation, if applicable |
+
+### Employee details section
+
+The employee's contact and identification information is populated here. Most fields are fetched from the employee record.
+
+| Field | Description |
+|---|---|
+| **Employee** | The travelling employee (required) |
+| **Contact Number** | Fetched from the employee's **Cell Number** |
+| **Contact Email** | Fetched from the employee's **Preferred Email** |
+| **Date of Birth** | Fetched from the employee record (read-only) |
+| **Identification Document Type** | Type of ID being used (e.g. passport) |
+| **Identification Document Number** | ID number |
+| **Passport Number** | Fetched from the employee record |
+
+### Travel itinerary
+
+The **Itinerary** table lets you add one row per leg of the journey.
+
+| Field | Description |
+|---|---|
+| **Travel From** | Departure location |
+| **Travel To** | Arrival location |
+| **Mode of Travel** | **Flight**, **Train**, **Taxi**, or **Rented Car** |
+| **Departure Datetime** | Scheduled departure date and time |
+| **Arrival Datetime** | Scheduled arrival date and time |
+| **Meal Preference** | **Vegetarian**, **Non-Vegetarian**, **Gluten Free**, or **Non Diary** |
+| **Travel Advance Required** | Check if the employee needs an advance for this leg |
+| **Advance Amount** | Estimated advance needed (visible only when **Travel Advance Required** is checked) |
+| **Lodging Required** | Check if accommodation is needed |
+| **Preferred Area for Lodging** | Preferred neighbourhood or hotel area (visible when **Lodging Required** is checked) |
+| **Check-in Date** | Lodging check-in date |
+| **Check-out Date** | Lodging check-out date |
+| **Other Details** | Any additional notes for this leg |
+
+### Costing details
+
+The **Costing** table lists estimated expenses broken down by category.
+
+| Field | Description |
+|---|---|
+| **Expense Type** | Link to an **Expense Claim Type** |
+| **Total Amount** | Total estimated cost for this expense type |
+| **Sponsored Amount** | Portion covered by an external sponsor |
+| **Funded Amount** | Portion the company will fund |
+| **Comments** | Notes about this cost line |
+
+**Cost Center** at the header level assigns the accounting dimension for all costing rows.
+
+### Event details section
+
+This collapsible section captures information about external events the employee is attending.
+
+| Field | Description |
+|---|---|
+| **Name of Organizer** | Organisation or individual hosting the event |
+| **Address of Organizer** | Venue or organisational address |
+| **Other Details** | Free-text field for additional event context |
+
+## Approval workflow
+
+<Steps>
+  <Step title="Submit the travel request">
+    The employee fills in all required fields — **Travel Type**, **Purpose of Travel**, and **Employee** — then submits the document. The **Travel Request** is a submittable doctype; submission locks the record.
+  </Step>
+  <Step title="Manager reviews">
+    The approving manager reviews the itinerary, costings, and purpose. In Frappe HR, approval for travel requests is typically managed via a custom **Workflow** assigned to the **Travel Request** doctype, or by manual review of the submitted document.
+  </Step>
+  <Step title="Approve or reject">
+    Using a configured workflow, the manager transitions the document to an approved or rejected state. Without a workflow, the document can be cancelled if the trip is not approved.
+  </Step>
+</Steps>
+
+<Note>
+The **Travel Request** doctype does not include a built-in approval status field. Use Frappe's **Workflow** feature (under **Setup > Workflow**) to add an approval state if your organisation requires formal pre-trip authorisation.
+</Note>
+
+## After the trip
+
+Once the employee returns, use the travel request as a reference to:
+
+1. **Request an advance** — Create an **Employee Advance** for the employee with the purpose matching the travel request. Link the advance to the appropriate cost center.
+2. **Submit an expense claim** — Create an **Expense Claim** for actual expenses incurred. Link any **Employee Advance** in the **Advance Payments** section to offset the balance.
+
+<Tip>
+Use the cost estimates in the **Costing** table of the **Travel Request** to validate that actual **Expense Claim** amounts are reasonable before approving.
+</Tip>
+
+## Document naming
+
+Travel requests are auto-named using the pattern `HR-TRQ-.YYYY.-.#####`, for example `HR-TRQ-2026-00001`.

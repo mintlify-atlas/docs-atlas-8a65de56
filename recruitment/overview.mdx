@@ -1,0 +1,68 @@
+---
+title: "Recruitment"
+description: "Manage the end-to-end hiring process from job requisitions to employee onboarding"
+keywords: ["recruitment", "hiring", "job opening", "job applicant", "interview", "job offer", "staffing plan"]
+---
+
+Frappe HR's recruitment module covers the full hiring pipeline — from identifying a staffing need to extending an offer and converting the hire into an employee record. Every step maps to a dedicated document that tracks decisions, triggers notifications, and updates linked records automatically.
+
+<CardGroup cols={2}>
+  <Card title="Job openings" icon="briefcase" href="/recruitment/job-opening">
+    Create and publish job openings, link them to staffing plans, and automate expiry
+  </Card>
+  <Card title="Job applicants" icon="user" href="/recruitment/job-applicant">
+    Track candidates through the pipeline, manage sources, and handle employee referrals
+  </Card>
+  <Card title="Interviews" icon="comments" href="/recruitment/interview">
+    Configure interview rounds, schedule sessions, collect feedback, and automate reminders
+  </Card>
+  <Card title="Job offers" icon="file-contract" href="/recruitment/job-offer">
+    Draft and send offers, track acceptance, and create the employee record in one click
+  </Card>
+</CardGroup>
+
+## How the recruitment pipeline works
+
+Each stage produces a document that feeds into the next:
+
+```
+Job Requisition  →  Job Opening  →  Job Applicant  →  Interview  →  Job Offer  →  Employee
+```
+
+<Steps>
+  <Step title="Raise a job requisition">
+    A department head creates a **Job Requisition** specifying the **Designation**, **No of Positions**, **Expected Compensation**, and **Expected By** date. HR reviews it and sets the status to **Open & Approved** when the hire is greenlit.
+  </Step>
+  <Step title="Create a job opening">
+    HR creates a **Job Opening** — either directly or by clicking **Create Job Opening** on the approved **Job Requisition**. The opening is linked back to the requisition automatically and can be published to your website for public applications.
+  </Step>
+  <Step title="Receive and manage applicants">
+    Candidates apply online or HR creates **Job Applicant** records manually. Each applicant is tracked with a status (**Open**, **Replied**, **Hold**, **Accepted**, or **Rejected**) and can be sourced from job boards, direct applications, or employee referrals.
+  </Step>
+  <Step title="Conduct interviews">
+    From a **Job Applicant** record, HR schedules one or more **Interview** sessions against configured **Interview Round** definitions. Interviewers submit **Interview Feedback** with skill ratings and a result of **Cleared** or **Rejected**.
+  </Step>
+  <Step title="Extend a job offer">
+    For applicants who clear all interview rounds, HR creates a **Job Offer** document with offer terms, compensation details, and a letter head. The offer is submitted and the status is tracked as **Awaiting Response**, **Accepted**, or **Rejected**.
+  </Step>
+  <Step title="Create the employee record">
+    Once a **Job Offer** is accepted, click **Create Employee** to generate a new **Employee** record pre-populated from the offer and applicant data. The hire is complete.
+  </Step>
+</Steps>
+
+## Supporting documents
+
+| Document | Purpose |
+|---|---|
+| **Staffing Plan** | Defines planned vacancies per designation for a date range; validates that job openings and offers stay within approved headcount |
+| **Interview Round** | Reusable template that sets default interviewers, expected skill set, and expected average rating for a type of interview |
+| **Job Opening Template** | Reusable template for populating job opening descriptions quickly |
+| **Employee Referral** | Lets employees formally refer candidates; automatically creates a **Job Applicant** and tracks referral bonus eligibility |
+
+## Recruitment analytics
+
+The **Recruitment Analytics** report (HR → Reports → Recruitment Analytics) provides a hierarchical view linking each **Staffing Plan** to its **Job Openings**, each opening to its **Job Applicants**, and each applicant to their **Job Offer** with offer date and status. Filter by **Company** and **Date** to see a snapshot of the entire pipeline at a point in time.
+
+<Note>
+Frappe HR enforces that a job applicant cannot be created against a closed **Job Opening**. Ensure openings are set to **Open** before accepting applications.
+</Note>

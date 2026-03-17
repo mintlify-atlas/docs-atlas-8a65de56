@@ -1,0 +1,104 @@
+---
+title: Salary components
+description: Configure earning and deduction components — including formula-based, statistical, and flexible benefit components — used in salary structures.
+keywords: [salary component, earning, deduction, formula, statistical component, flexible benefit, HRA, PF, income tax]
+---
+
+A **Salary Component** represents a single line item on a salary slip — either an earning that adds to gross pay or a deduction that reduces it. Components are reusable across multiple salary structures.
+
+## Creating a salary component
+
+Go to **Payroll > Salary Component > New**.
+
+### Overview tab
+
+| Field | Description |
+|---|---|
+| **Name** | Display name of the component (e.g., *Basic Salary*, *House Rent Allowance*) |
+| **Abbr** | Short abbreviation used in formulas (e.g., `BS`, `HRA`). Must be unique across all components. |
+| **Type** | *Earning* or *Deduction* |
+| **Description** | Optional description shown on salary slips |
+| **Depends on Payment Days** | Pro-rate the component amount proportionally to the employee's actual payment days |
+| **Is Tax Applicable** | (Earning only) Include this earning in the taxable salary calculation |
+| **Deduct Full Tax on Selected Payroll Date** | Deduct all remaining tax in a single payroll cycle for one-time earnings |
+| **Variable Based on Taxable Salary** | (Deduction only) Mark this as the income tax component; the amount is auto-computed from the income tax slab |
+| **Is Income Tax Component** | Include this deduction in the *Income Tax Deductions* report |
+| **Exempted from Income Tax** | (Deduction only) Deduct the full amount from taxable income without requiring a declaration or proof |
+| **Statistical Component** | Compute the component's value but do not add it to earnings or deductions; use as a variable in other formulas |
+| **Accrual Component** | Accrue amounts each cycle without paying them out immediately; balance tracked in the Employee Benefit Ledger |
+| **Do Not Include in Total** | Exclude the amount from gross pay / total deductions but still show it on the slip |
+| **Do Not Include in Accounting Entries** | Skip this component in journal entries (only relevant when **Do Not Include in Total** is enabled) |
+| **Remove if Zero Valued** | Hide the component on the slip when its amount is zero |
+| **Round to the Nearest Integer** | Round the computed amount to a whole number |
+| **Arrear Component** | Include this component in arrear calculations when a salary revision is backdated |
+| **Disabled** | Disable the component so it cannot be added to new structures |
+
+### Condition & Formula tab
+
+| Field | Description |
+|---|---|
+| **Condition** | Python expression; the component is included only when this evaluates to `True` |
+| **Amount Based on Formula** | Enable to calculate the amount using a Python formula |
+| **Formula** | Python expression evaluated at salary slip generation time |
+| **Amount** | Fixed currency amount (shown only when **Amount Based on Formula** is off) |
+
+### Accounts section
+
+Map the component to a ledger account per company. During payroll journal entry creation, earnings are debited to their respective accounts and deductions are credited.
+
+## Component types
+
+### Earning components
+
+Earning components increase an employee's gross pay. Set **Type = Earning**.
+
+- By default, earnings are taxable (**Is Tax Applicable** is on).
+- Disable **Is Tax Applicable** for non-taxable reimbursements such as medical bills or travel reimbursements.
+
+### Deduction components
+
+Deduction components reduce an employee's net pay. Set **Type = Deduction**.
+
+- For the income tax component, enable **Variable Based on Taxable Salary**. Do not set a formula or amount — the system auto-calculates it from the **Income Tax Slab**.
+- For statutory deductions like Provident Fund, leave **Variable Based on Taxable Salary** off and use a formula such as `BS * 0.12`.
+
+## Statistical components
+
+Enable **Statistical Component** when you need a value available in other formulas but you do not want it to appear as an earning or deduction on the salary slip.
+
+Example: define a *Gross Salary* component with formula `BS + HRA + TA` and abbreviation `GROSS`. Other components can then reference `GROSS` in their own formulas without the component itself appearing on the slip.
+
+<Note>
+Statistical components do not require an account mapping and are never included in journal entries.
+</Note>
+
+## Flexible benefit components
+
+Flexible benefits let employees choose how to draw an annual benefit allowance (e.g., food coupons, health insurance, fuel).
+
+Enable **Is Flexible Benefit** on the component and choose a **Payout Method**:
+
+| Payout Method | Behaviour |
+|---|---|
+| *Accrue and payout at end of payroll period* | Accrue each cycle; pay the full balance in the last cycle of the payroll period |
+| *Accrue per cycle, pay only on claim* | Accrue each cycle; pay only when the employee submits an Employee Benefit Claim |
+| *Allow claim for full benefit amount* | No accrual; employee can claim the full yearly amount at any point |
+
+Set **Max Benefit Amount (Yearly)** to cap how much any employee can be assigned for this component. Enable **Payout Unclaimed Amount in Final Payroll Cycle** to auto-pay any accrued but unclaimed balance at year end.
+
+## Common components — examples
+
+| Component | Type | Abbr | Formula / Notes |
+|---|---|---|---|
+| Basic Salary | Earning | `BS` | `base * 0.5` |
+| House Rent Allowance | Earning | `HRA` | `BS * 0.4` |
+| Transport Allowance | Earning | `TA` | Fixed amount, e.g. 1600 |
+| Special Allowance | Earning | `SA` | `base - BS - HRA - TA` |
+| Provident Fund | Deduction | `PF` | `BS * 0.12` |
+| Professional Tax | Deduction | `PT` | Flat amount, condition-based |
+| Income Tax (TDS) | Deduction | `TDS` | `Variable Based on Taxable Salary = Yes` |
+| Gratuity Accrual | Earning | `GRA` | Statistical, accrual component |
+
+## Updating components across structures
+
+When you change a formula or amount on a **Salary Component**, you can propagate the change to all salary structures that include that component. On the component form, click **Update Salary Structures** and select which structures to update.

@@ -1,0 +1,104 @@
+---
+title: Leave policies
+description: Bundle leave types with annual allocations into reusable policies, then assign those policies to employees for a leave period.
+---
+
+A **Leave Policy** is a template that lists each leave type your organization offers and the number of days employees are entitled to per year. A **Leave Policy Assignment** connects that template to a specific employee for a specific period.
+
+Using policies means you configure annual entitlements once and apply them consistently across hundreds of employees instead of creating individual allocations.
+
+## Leave Period
+
+Before creating policies and assignments you need at least one active **Leave Period**.
+
+A **Leave Period** defines the date range your organization uses for leave (typically a financial or calendar year). Go to **HR > Leave Management > Leave Period > New** and fill in:
+
+| Field | Description |
+|-------|-------------|
+| **From Date** | Start of the leave year (e.g., `01-01-2025`). |
+| **To Date** | End of the leave year (e.g., `31-12-2025`). |
+| **Company** | The company this period applies to. |
+| **Is Active** | Mark this period as currently active. Only one period per company should be active at a time. |
+| **Holiday List for Optional Leave** | The optional holiday list used to validate **Optional Leave** applications during this period. |
+
+## Leave Policy
+
+A **Leave Policy** document (autonamed `HR-LPOL-YYYY-#####`) contains a **Leave Policy Details** table. Each row in the table maps a **Leave Type** to an **Annual Allocation** (number of days).
+
+<Steps>
+  <Step title="Create a new Leave Policy">
+    Go to **HR > Leave Management > Leave Policy > New**. Enter a descriptive **Title** (for example, *Standard Policy 2025* or *Senior Staff Policy*).
+  </Step>
+  <Step title="Add leave types">
+    In the **Leave Allocations** table, add a row for each leave type:
+    - **Leave Type** — select the leave type
+    - **Annual Allocation** — total days per year
+
+    If a leave type has **Maximum Leave Allocation Allowed per Leave Period** set, the annual allocation cannot exceed that limit.
+  </Step>
+  <Step title="Submit">
+    Click **Submit**. A submitted policy is required before you can create assignments. Amend and resubmit to make changes.
+  </Step>
+</Steps>
+
+<Note>
+Leave policies are submittable documents. Once submitted, you must **Amend** a policy to change it. This preserves a history of which entitlements were in effect at any point in time.
+</Note>
+
+## Leave Policy Assignment
+
+A **Leave Policy Assignment** links a submitted **Leave Policy** to an employee for a period. When you submit a **Leave Policy Assignment**, Frappe HR automatically creates **Leave Allocation** records for all the leave types in the policy.
+
+### Creating an assignment
+
+<Steps>
+  <Step title="Open Leave Policy Assignment">
+    Go to **HR > Leave Management > Leave Policy Assignment > New**.
+  </Step>
+  <Step title="Select the employee and policy">
+    - **Employee** — the employee to assign the policy to
+    - **Leave Policy** — select the submitted policy
+  </Step>
+  <Step title="Choose the assignment basis">
+    Set **Assignment based on**:
+    - **Leave Period** — dates are filled automatically from the selected **Leave Period**.
+    - **Joining Date** — **Effective From** is set to the employee's date of joining; you set **Effective To** manually.
+    - Leave blank to set **Effective From** and **Effective To** manually.
+  </Step>
+  <Step title="Configure carry-forward">
+    Check **Add unused leaves from previous allocations** if you want the system to carry over unused balances from the previous period when creating the allocations.
+  </Step>
+  <Step title="Submit">
+    Click **Submit**. The system creates one **Leave Allocation** record per leave type in the policy. For earned leave types, it also generates a scheduled accrual table.
+  </Step>
+</Steps>
+
+### Assignment fields reference
+
+| Field | Description |
+|-------|-------------|
+| **Employee** | The employee receiving this policy. |
+| **Leave Policy** | The submitted policy document. |
+| **Assignment based on** | `Leave Period`, `Joining Date`, or blank for manual dates. |
+| **Leave Period** | Required when assignment is based on Leave Period. |
+| **Effective From** | Start date of the allocation. |
+| **Effective To** | End date of the allocation. |
+| **Add unused leaves from previous allocations** | Carry forward unused balances from prior allocations. |
+| **Leaves Allocated** | System-managed flag; set to 1 once allocations are created. |
+
+## Carry-forward behavior
+
+When **Add unused leaves from previous allocations** is checked on a **Leave Policy Assignment**:
+
+1. Frappe HR looks for the most recent submitted **Leave Allocation** for the same employee and leave type where **To Date** is before the new allocation's **From Date**.
+2. It calculates the unused balance by summing the **Leave Ledger Entry** records for that previous allocation.
+3. The unused balance is capped by **Maximum Carry Forwarded Leaves** if that field is set on the **Leave Type**.
+4. A separate ledger entry is created for the carried-forward leaves with its own expiry date (based on **Expire Carry Forwarded Leaves (Days)** on the leave type).
+
+<Tip>
+For earned leave types, the carried-forward balance from the previous period is visible in the **Carry Forwarded Leaves** column on the previous allocation record after the new allocation is submitted.
+</Tip>
+
+## Bulk assignment
+
+To assign a leave policy to multiple employees at once, go to the **Leave Policy Assignment** list and use the **Bulk Leave Policy Assignment** tool. You can filter employees by department, designation, or employment type.

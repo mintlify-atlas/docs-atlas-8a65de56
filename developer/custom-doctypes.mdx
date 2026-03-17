@@ -1,0 +1,142 @@
+---
+title: "Extending Frappe HR"
+description: "Create custom doctypes, add custom fields to existing doctypes, write scripts, and export customisations for version control"
+---
+
+## Creating a custom doctype
+
+You create new DocTypes directly from the Frappe Desk. No code is required.
+
+<Steps>
+
+<Step title="Open the DocType list">
+
+In the **Desk** search bar, type **DocType** and open the list. Click **New**.
+</Step>
+
+<Step title="Define fields">
+
+Give the DocType a name, assign it a **Module** (use your custom app's module, not `HR` or `Payroll`), and add fields in the **Fields** table. Each field has a fieldname, label, and fieldtype.
+</Step>
+
+<Step title="Set permissions">
+
+Open the **Permissions** tab and grant read/write/create permissions to the relevant roles (e.g. **HR Manager**, **Employee**).
+</Step>
+
+<Step title="Save and migrate">
+
+Save the DocType. Frappe automatically creates the corresponding MariaDB table. If you are working in a custom app, run:
+
+```bash
+bench --site {your-site} migrate
+```
+</Step>
+
+</Steps>
+
+<Note>
+Create custom DocTypes inside a **custom app**, not inside the Frappe HR app itself. This keeps your customisations separate from upstream code and makes upgrades safe.
+</Note>
+
+## Adding custom fields to existing DocTypes
+
+You can add fields to existing DocTypes like **Employee**, **Salary Slip**, or **Leave Application** without modifying Frappe HR source files. These additions are called **Custom Fields** and are stored in the database.
+
+<Steps>
+
+<Step title="Open Custom Field">
+
+In the search bar, type **Custom Field** and click **New**.
+</Step>
+
+<Step title="Select the DocType and define the field">
+
+- **DocType**: select the target (e.g. `Employee`)
+- **Label**: human-readable name
+- **Fieldname**: auto-populated from the label; prefix with your app name to avoid conflicts (e.g. `my_app_employee_badge_number`)
+- **Fieldtype**: `Data`, `Int`, `Link`, `Select`, etc.
+- **Insert After**: choose which existing field this one appears after
+</Step>
+
+<Step title="Save">
+
+Save the Custom Field. It appears in the DocType form immediately. No migration is needed.
+</Step>
+
+</Steps>
+
+<Tip>
+Prefix all custom field names with your app or company prefix (e.g. `acme_`) to prevent collisions with fields added in future Frappe HR releases.
+</Tip>
+
+## Custom scripts
+
+### Client scripts
+
+Client Scripts run JavaScript in the browser on a specific DocType's form. Use them to add custom validation, hide/show fields dynamically, or add buttons.
+
+1. Search for **Client Script** in the Desk and click **New**.
+2. Set **DocType** to your target (e.g. `Leave Application`).
+3. Write your JavaScript in the **Script** box:
+
+```javascript
+frappe.ui.form.on('Leave Application', {
+    refresh(frm) {
+        if (frm.doc.leave_type === 'Maternity Leave') {
+            frm.set_df_property('from_date', 'reqd', 1);
+        }
+    }
+});
+```
+
+### Server scripts
+
+Server Scripts run Python on the server, triggered by document events or as scheduled tasks.
+
+1. Search for **Server Script** and click **New**.
+2. Set **Script Type** to `DocType Event` or `Scheduler Event`.
+3. For DocType Events, pick the **DocType** and **DocType Event** (e.g. `Before Save`).
+4. Write Python using the `doc` object that Frappe provides:
+
+```python
+# Runs before every Leave Application save
+if doc.leave_type == "Sick Leave" and doc.total_leave_days > 3:
+    frappe.throw("Medical certificate required for sick leave over 3 days.")
+```
+
+## Customisation export for version control
+
+Custom Fields, Client Scripts, Server Scripts, and Custom DocTypes all live in the database by default. To version-control them, export them to your custom app.
+
+**Export all customisations for a module:**
+
+```bash
+bench --site {your-site} export-customizations --module "Your Module" --folder /path/to/your_app/your_app/fixtures
+```
+
+This writes JSON fixture files. Commit these files to your repository.
+
+**Import customisations on a fresh install:**
+
+```bash
+bench --site {your-site} import-doc /path/to/your_app/your_app/fixtures/custom_field/my_custom_field.json
+```
+
+Or declare them in your app's `hooks.py` so `bench migrate` imports them automatically:
+
+```python
+# your_app/hooks.py
+fixtures = [
+    {"doctype": "Custom Field", "filters": [["module", "=", "Your Module"]]},
+    {"doctype": "Client Script", "filters": [["module", "=", "Your Module"]]},
+]
+```
+
+## Best practices for upgradeability
+
+- **Never edit Frappe HR source files** for customisations. Use Custom Fields, Custom Scripts, or `override_doctype_class` in your own app.
+- **Prefix all custom fieldnames** with a unique string to avoid collisions with future Frappe HR fields.
+- **Export fixtures to your app** so customisations survive a fresh `bench restore` or a new site installation.
+- **Test after every Frappe HR upgrade.** Run `bench update` in a staging environment first, run your test suite, then deploy to production.
+- **Use server scripts sparingly** for simple logic; for complex business logic, write a proper Python module in your custom app and call it from a `doc_events` hook.

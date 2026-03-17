@@ -1,0 +1,100 @@
+---
+title: "Reports & analytics"
+description: "A complete reference to the built-in reports available in Frappe HR, organised by category."
+keywords: ["reports", "analytics", "attendance", "leave", "payroll", "recruitment", "frappe hr"]
+---
+
+Frappe HR ships with a rich set of built-in reports that you can run directly from the Frappe desk interface. Navigate to **Frappe HR → Reports**, or use the global search bar, to find any report by name. Every report supports standard Frappe desk actions: apply filters, toggle columns, export to **Excel** or **PDF**, and share a filtered URL with your team.
+
+<Note>
+All reports respect Frappe's role-based permissions. An employee can only see data that their role has access to. Configure permissions under **Setup → Role Permissions Manager**.
+</Note>
+
+## Reports by category
+
+<CardGroup cols={2}>
+  <Card title="Attendance reports" icon="calendar-check" href="/reports/attendance-reports">
+    Monthly Attendance Sheet, Shift Attendance, Employees Working on a Holiday, and Employee Analytics
+  </Card>
+  <Card title="Leave reports" icon="calendar-minus" href="/reports/leave-reports">
+    Employee Leave Balance, Employee Leave Balance Summary, and Leave Ledger
+  </Card>
+  <Card title="Payroll reports" icon="money-bill" href="/reports/payroll-reports">
+    Salary Register, Bank Remittance, Income Tax Deductions, Accrued Earnings, and statutory deduction reports
+  </Card>
+  <Card title="Recruitment analytics" icon="user-plus" href="/reports/recruitment-analytics">
+    Recruitment Analytics pipeline, Employee Exits, and offboarding status
+  </Card>
+</CardGroup>
+
+## Full report index
+
+### Attendance
+
+| Report | Description |
+|---|---|
+| **Monthly Attendance Sheet** | Employee-wise daily attendance status for a month or custom date range |
+| **Shift Attendance** | Shift-wise attendance with check-in/check-out times and late entry/early exit detail |
+| **Employees Working on a Holiday** | Lists employees who recorded attendance on a holiday date |
+| **Employee Analytics** | Headcount breakdown by branch, department, designation, grade, or gender |
+| **Employee Hours Utilization Based on Timesheet** | Working hours utilisation against timesheets |
+
+### Leave
+
+| Report | Description |
+|---|---|
+| **Employee Leave Balance** | Opening balance, allocated, taken, expired, and closing balance per leave type |
+| **Employee Leave Balance Summary** | Remaining leave balance per leave type across all employees in a single pivot view |
+| **Leave Ledger** | Full transaction history of every leave credit and debit entry |
+
+### Payroll
+
+| Report | Description |
+|---|---|
+| **Salary Register** | Earning and deduction component breakdown from submitted salary slips |
+| **Bank Remittance** | Net pay amounts and employee bank account details for payroll disbursement |
+| **Income Tax Deductions** | Income-tax component amounts from salary slips |
+| **Accrued Earnings Report** | Accrued vs paid benefit components per payroll period |
+| **Salary Payments Based on Payment Mode** | Payment mode breakdown for salary disbursements |
+| **Salary Payments via ECS** | Electronic Clearing Service payment file |
+| **Provident Fund Deductions** | PF deduction amounts per employee |
+| **Professional Tax Deductions** | Professional tax deduction amounts per employee |
+| **Income Tax Computation** | Projected income tax workings for a payroll period |
+
+### Recruitment
+
+| Report | Description |
+|---|---|
+| **Recruitment Analytics** | Staffing plan → job opening → applicant → offer pipeline with status at each stage |
+| **Employee Exits** | Exiting employees with exit interview, final decision, and Full and Final Statement status |
+
+### Other
+
+| Report | Description |
+|---|---|
+| **Employee Information** | Master employee data export for audits or bulk updates |
+| **Employee Birthday** | Upcoming employee birthdays by month |
+| **Employee Advance Summary** | Outstanding employee advance amounts |
+| **Unpaid Expense Claim** | Expense claims that have been approved but not yet paid |
+| **Vehicle Expenses** | Fleet expense tracking by vehicle |
+| **Daily Work Summary Replies** | Responses from the Daily Work Summary email digest |
+| **Project Profitability** | Revenue vs cost for projects linked to timesheets |
+| **Appraisal Overview** | Status of appraisals across the active appraisal cycle |
+
+## Accessing a report
+
+<Steps>
+  <Step title="Open the Report">
+    Go to **Frappe HR** in the desk navbar. Under the relevant module section, click the report name. You can also search for any report by name using the global search (`Ctrl+G` / `Cmd+G`).
+  </Step>
+  <Step title="Set filters">
+    Each report shows a filter bar at the top. Required filters (such as **Company** or date range) are marked with an asterisk. Apply your filters and click **Run** or press `Enter`.
+  </Step>
+  <Step title="Export the results">
+    Click the **⋮** menu (top-right of the results grid) and choose **Export**. Select **Excel** for a spreadsheet or **PDF** for a printable view.
+  </Step>
+</Steps>
+
+<Tip>
+Save a commonly used filter combination as a custom report by clicking **Save** in the filter bar. Saved reports appear in the **Custom Reports** list and can be shared with other users.
+</Tip>

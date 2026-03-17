@@ -1,0 +1,83 @@
+---
+title: "Employee lifecycle"
+description: "Understand the Employee record structure, status transitions, grades, and how Frappe HR tracks work history."
+keywords: ["employee record", "employee status", "employee grade", "work history", "department", "designation"]
+---
+
+The **Employee** doctype is the central record for every person in your organisation. Every other HR document — payroll, leave, attendance, appraisals — links back to it.
+
+## Employee record fields
+
+When you create or update an employee, the key fields are:
+
+| Field | Description |
+|---|---|
+| `employee_name` | Full name of the employee |
+| `date_of_joining` | The date the employee joined the company |
+| `department` | The department the employee currently belongs to |
+| `designation` | The employee's current job title |
+| `grade` | The **Employee Grade** linked to the employee (controls default salary structure) |
+| `company` | The company entity this employee belongs to |
+| `status` | Current employment status — see below |
+| `relieving_date` | The date the employee was relieved (required before creating an Exit Interview or Full and Final Statement) |
+| `reports_to` | The manager this employee reports to |
+| `leave_approver` | The user who approves this employee's leave requests |
+| `expense_approver` | The user who approves this employee's expense claims |
+| `user_id` | The linked Frappe user account |
+
+<Note>
+When you save an employee and set a `leave_approver` or `expense_approver`, Frappe HR automatically grants the **Leave Approver** or **Expense Approver** role to that user.
+</Note>
+
+## Employee status transitions
+
+The `status` field on the Employee record controls access to most HR workflows. The valid values are:
+
+- **Active** — the employee is currently working. Most documents (leave, attendance, payroll) require Active status.
+- **On Leave** — the employee is on an extended leave of absence.
+- **Left** — the employee has been relieved. This status is set automatically when you submit an **Employee Transfer** with **Create New Employee ID** enabled, which relieves the old record.
+- **Inactive** — the employee record exists but the employee is not actively employed.
+
+<Warning>
+Documents such as **Employee Promotion** and **Employee Transfer** call `validate_active_employee` before submission. If the employee's status is not Active, submission is blocked.
+</Warning>
+
+## Employee naming
+
+You can configure how employee IDs are generated in **HR Settings** under **Employee Naming System**. The available methods are:
+
+- **Naming Series** — auto-generates IDs like `HR-EMP-00001`
+- **Employee Number** — uses a manually entered employee number
+- **Full Name** — uses the employee's full name as the ID
+
+## Employee grade
+
+**Employee Grade** is a simple master record you create in advance. Each grade can have:
+
+| Field | Description |
+|---|---|
+| `default_salary_structure` | The salary structure applied by default for employees at this grade |
+| `default_base_pay` | The default base pay for this grade |
+
+Grades are referenced on the Employee record (`grade` field) and flow through to **Employee Onboarding**, **Employee Separation**, **Employee Promotion**, and **Employee Transfer** documents.
+
+## Work history tracking
+
+Frappe HR maintains an internal work history on each Employee record. Every time you submit an **Employee Transfer** or **Employee Promotion**, the system calls `update_employee_work_history`, which appends a row to the employee's history for each changed property.
+
+Each history row records:
+- The **field name** that changed
+- The **previous value**
+- The **new value**
+- The **date** of the change
+
+When you cancel a Transfer or Promotion, `update_employee_work_history` is called with `cancel=True`, which reverses the history entries and restores the previous values on the employee record.
+
+## Department and designation management
+
+**Department** and **Designation** are separate master records you set up before creating employees.
+
+- Go to **HR > Setup > Department** to create departments. Departments are hierarchical — you can nest sub-departments under a parent.
+- Go to **HR > Setup > Designation** to create job titles.
+
+Once set up, you link them to employees directly and reference them in Transfer and Promotion documents to record role changes.

@@ -1,0 +1,124 @@
+---
+title: "Job offers"
+description: "Create and track job offers for selected candidates"
+keywords: ["job offer", "offer letter", "offer terms", "accepted offer", "create employee", "staffing plan"]
+---
+
+A **Job Offer** is a submittable document that formalises the terms of employment for a selected candidate. When the candidate accepts, you can convert the offer into an **Employee** record with a single click.
+
+## Job Offer fields
+
+| Field | Description |
+|---|---|
+| `job_applicant` | The **Job Applicant** this offer is for. Required. Only non-rejected applicants appear in the search. |
+| `applicant_name` | Fetched from the applicant. Read-only. |
+| `applicant_email` | Fetched from the applicant's email address. Read-only. |
+| `designation` | The role being offered. Fetched from the applicant's designation. Required. |
+| `company` | The hiring company. Required. |
+| `offer_date` | Date the offer is issued. Required. |
+| `status` | Current offer state. See [Offer statuses](#offer-statuses) below. |
+| `job_offer_term_template` | Optional template to pre-fill the **Job Offer Terms** table. |
+| `offer_terms` | Table of individual offer terms (e.g., salary, bonus, notice period). Each row is a **Job Offer Term**. |
+| `select_terms` | Links to a **Terms and Conditions** document for legal boilerplate. |
+| `terms` | Full terms and conditions text. Populated from **Select Terms** or entered manually. |
+| `letter_head` | Letter head for printed output. Defaults to the company's default letter head. |
+
+## Offer statuses
+
+| Status | Meaning |
+|---|---|
+| **Awaiting Response** | Offer has been submitted and sent to the candidate; response is pending |
+| **Accepted** | Candidate accepted the offer |
+| **Rejected** | Candidate declined the offer |
+| **Cancelled** | Offer was cancelled (set automatically when the document is discarded) |
+
+When the status changes to **Accepted** or **Rejected**, Frappe HR automatically updates the linked **Job Applicant** status to match.
+
+## Using a Job Offer Term Template
+
+A **Job Offer Term Template** lets you save a standard set of offer terms so you do not have to enter them manually for every offer.
+
+<Steps>
+  <Step title="Create the template">
+    Go to **HR → Recruitment → Job Offer Term Template** and click **New**. Add rows to the **Offer Terms** table — each row has an **Offer Term** (e.g., Annual CTC, Variable Pay, Notice Period) and a **Value**.
+  </Step>
+  <Step title="Apply to an offer">
+    On the **Job Offer** form, select the template in **Job Offer Term Template**. The **Job Offer Terms** table populates automatically. Adjust individual values as needed before submitting.
+  </Step>
+</Steps>
+
+## Creating a Job Offer
+
+<Steps>
+  <Step title="Open the form">
+    Go to **HR → Recruitment → Job Offer** and click **New**.
+  </Step>
+  <Step title="Select the applicant">
+    Choose the **Job Applicant** in the `job_applicant` field. The **Applicant Name**, **Applicant Email Address**, and **Designation** populate automatically.
+  </Step>
+  <Step title="Set the offer date and company">
+    Enter the **Offer Date** and confirm the **Company**.
+  </Step>
+  <Step title="Add offer terms">
+    Either select a **Job Offer Term Template** to auto-fill the terms table, or add rows manually to **Job Offer Terms**. Each row captures one term and its value.
+  </Step>
+  <Step title="Add terms and conditions">
+    Select a **Terms and Conditions** document in **Select Terms and Conditions** to pull in legal boilerplate, or type directly in the **Terms and Conditions** text editor.
+  </Step>
+  <Step title="Save and submit">
+    Click **Save**, then **Submit**. The status is set to **Awaiting Response** automatically.
+  </Step>
+</Steps>
+
+<Note>
+Only one active (non-cancelled) **Job Offer** can exist per **Job Applicant**. Attempting to create a second offer for the same applicant raises a validation error.
+</Note>
+
+## Staffing Plan vacancy check
+
+When you save a **Job Offer**, Frappe HR checks the active **Staffing Plan** for the offer's designation, company, and offer date. If **Check Vacancies** is enabled in **HR Settings** and the number of submitted offers already equals or exceeds the planned vacancies, saving the offer raises an error.
+
+To adjust this behaviour, go to **HR → Settings → HR Settings** and toggle **Check Vacancies**.
+
+## Tracking offer response
+
+After submitting the offer, update the status based on the candidate's response:
+
+- To record acceptance: change **Status** to **Accepted** and click **Save**.
+- To record rejection: change **Status** to **Rejected** and click **Save**.
+
+The **Status** field allows edits after submission (`allow_on_submit`), so you do not need to cancel and amend the document to update it.
+
+## Converting an accepted offer to an Employee
+
+Once a **Job Offer** is accepted, you can create the employee record directly:
+
+<Steps>
+  <Step title="Open the accepted Job Offer">
+    Open the submitted **Job Offer** with status **Accepted**.
+  </Step>
+  <Step title="Click Create Employee">
+    Click the **Create Employee** button. Frappe HR maps the offer fields to the new employee:
+    - `applicant_name` → `employee_name`
+    - `offer_date` → `scheduled_confirmation_date`
+    - `email_id` (from the job applicant) → `personal_email`
+  </Step>
+  <Step title="Complete the employee record">
+    The new **Employee** form opens pre-filled. Add any remaining required fields (date of birth, bank details, etc.) and save.
+  </Step>
+</Steps>
+
+<Tip>
+If an employee record has already been created from this offer, the **Employee** link is shown on the **Job Offer** form via the `onload` hook. You will not be prompted to create a duplicate.
+</Tip>
+
+## Printing the offer letter
+
+To generate a printable offer letter:
+
+1. Open the submitted **Job Offer**.
+2. Select a **Letter Head** (defaults to the company's default letter head).
+3. Optionally select a **Print Heading** in **Select Print Heading** to customise the document title.
+4. Click the **Print** button and choose a print format.
+
+The printed output includes the offer terms table and the full terms and conditions text.

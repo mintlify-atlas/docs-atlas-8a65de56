@@ -1,0 +1,230 @@
+---
+title: Shift management
+description: Configure shift types, assign shifts to employees, and automate attendance processing from check-in logs.
+---
+
+Frappe HR's shift management system lets you define working schedules (**Shift Types**), assign those schedules to employees (**Shift Assignments**), and automatically create **Attendance** records from **Employee Checkin** data without any manual intervention.
+
+## Shift Type
+
+A **Shift Type** is the master configuration for a working schedule. It defines when the shift starts and ends and controls how auto-attendance behaves.
+
+### Creating a Shift Type
+
+<Steps>
+  <Step title="Open Shift Type">
+    Go to **HR > Attendance > Shift Type > New**. Enter a name for the shift (for example, *Morning Shift* or *Night Shift*).
+  </Step>
+  <Step title="Set the timing">
+    - **Start Time** — when the shift begins (24-hour format)
+    - **End Time** — when the shift ends. If the end time is earlier than the start time, Frappe HR treats the shift as overnight.
+  </Step>
+  <Step title="Configure optional settings">
+    - **Holiday List** — a shift-specific holiday list. If left blank, the employee's default holiday list is used.
+    - **Roster Color** — the color used on the shift roster view.
+  </Step>
+  <Step title="Enable auto-attendance (optional)">
+    Check **Enable Auto Attendance** to allow the system to create attendance records from checkin logs. See the [Auto-attendance settings](#auto-attendance-settings) section below.
+  </Step>
+  <Step title="Save">
+    Click **Save**.
+  </Step>
+</Steps>
+
+### Shift Type fields reference
+
+| Field | Description |
+|-------|-------------|
+| **Start Time** | Shift start (required). |
+| **End Time** | Shift end (required). Overnight shifts are supported. |
+| **Holiday List** | Override holiday list for this shift. |
+| **Roster Color** | Display color: Blue, Cyan, Fuchsia, Green, Lime, Orange, Pink, Red, Violet, or Yellow. |
+| **Enable Auto Attendance** | Enables automated attendance creation from checkin logs. |
+| **Allow Overtime** | Enables overtime tracking; requires an **Overtime Type**. |
+
+## Auto-attendance settings
+
+When **Enable Auto Attendance** is checked, the following fields appear:
+
+### Check-in window
+
+| Field | Description |
+|-------|-------------|
+| **Begin check-in before shift start time (in minutes)** | Checkins this many minutes before shift start are counted for this shift. Default: 60. |
+| **Allow check-out after shift end time (in minutes)** | Checkins this many minutes after shift end are counted for this shift. Default: 60. |
+
+### Working hours thresholds
+
+| Field | Description |
+|-------|-------------|
+| **Working Hours Threshold for Half Day** | If working hours are below this value, attendance is marked **Half Day**. Set to 0 to disable. |
+| **Working Hours Threshold for Absent** | If working hours are below this value, attendance is marked **Absent**. Set to 0 to disable. |
+
+The absent threshold takes priority over the half-day threshold. If both are set and the employee's hours fall below both thresholds, the attendance is **Absent**.
+
+### Working hours calculation
+
+| Field | Options |
+|-------|---------|
+| **Determine Check-in and Check-out** | `Alternating entries as IN and OUT during the same shift` — the first log is IN, the second is OUT, alternating. `Strictly based on Log Type in Employee Checkin` — uses the **Log Type** field on each checkin record. |
+| **Working Hours Calculation Based On** | `First Check-in and Last Check-out` — uses only the first IN and last OUT for the shift. `Every Valid Check-in and Check-out` — sums all valid IN/OUT pairs. |
+
+### Sync configuration
+
+| Field | Description |
+|-------|-------------|
+| **Process Attendance After** | Attendance will only be created for dates on or after this date. Required when auto-attendance is enabled. |
+| **Last Sync of Checkin** | The timestamp up to which checkin logs have been synced. Auto-attendance only processes logs before this timestamp. |
+| **Automatically update Last Sync of Checkin** | When checked, the system updates **Last Sync of Checkin** automatically after each shift ends. Recommended for single-device setups. |
+| **Mark Auto Attendance on Holidays** | When checked, attendance is also auto-marked on holiday dates if checkin logs exist. |
+
+### Grace periods
+
+| Field | Description |
+|-------|-------------|
+| **Enable Late Entry Marking** | Activates late entry detection. |
+| **Late Entry Grace Period** | Minutes after shift start before a checkin is flagged as late. |
+| **Enable Early Exit Marking** | Activates early exit detection. |
+| **Early Exit Grace Period** | Minutes before shift end when a checkout is flagged as early. |
+
+<Note>
+Grace period checks use the actual shift start and end, not the check-in window boundaries. An employee who checks in at shift start + 10 minutes with a 15-minute grace period is **not** flagged as late.
+</Note>
+
+## Shift Assignment
+
+A **Shift Assignment** (series `HR-SHA-YY-MM-#####`) assigns a specific **Shift Type** to an employee for a date range.
+
+### Creating a Shift Assignment
+
+<Steps>
+  <Step title="Open Shift Assignment">
+    Go to **HR > Attendance > Shift Assignment > New**.
+  </Step>
+  <Step title="Fill in the employee and shift details">
+    - **Employee** — the employee
+    - **Shift Type** — the shift to assign
+    - **Start Date** — when the assignment begins
+    - **End Date** — when the assignment ends (optional; leave blank for an open-ended assignment)
+    - **Status** — `Active` or `Inactive`
+    - **Shift Location** — optionally link to a **Shift Location** record
+  </Step>
+  <Step title="Submit">
+    Click **Submit**. The assignment is active immediately. You can change the **End Date** and **Status** after submission.
+  </Step>
+</Steps>
+
+### Shift Assignment fields reference
+
+| Field | Description |
+|-------|-------------|
+| **Employee** | The employee. |
+| **Shift Type** | The assigned shift. |
+| **Start Date** | First day of the assignment. |
+| **End Date** | Last day of the assignment (optional). |
+| **Status** | Active or Inactive. |
+| **Shift Location** | Optional work location for this assignment. |
+| **Overtime Type** | Auto-fetched from the shift type; can be overridden per assignment. |
+| **Shift Request** | Link to the originating **Shift Request** (read-only). |
+| **Shift Schedule Assignment** | Link to the originating **Shift Schedule Assignment** (read-only). |
+
+## Shift Schedule Assignment
+
+A **Shift Schedule Assignment** creates recurring **Shift Assignment** records automatically, so you do not need to manually create a new assignment every time a repeating schedule ends.
+
+### Creating a Shift Schedule Assignment
+
+<Steps>
+  <Step title="Open Shift Schedule Assignment">
+    Go to **HR > Attendance > Shift Schedule Assignment > New**.
+  </Step>
+  <Step title="Select the employee and schedule">
+    - **Employee** — the employee
+    - **Shift Schedule** — the recurring schedule template
+    - **Shift Location** — optional
+    - **Shift Status** — `Active` or `Inactive`
+  </Step>
+  <Step title="Configure auto-creation">
+    - **Enabled** — check this for assignments to be created continuously.
+    - **Create Shifts After** — new shift assignments are created for dates after this date.
+  </Step>
+  <Step title="Save">
+    A scheduler creates **Shift Assignment** records based on the schedule and the **Create Shifts After** date. Each created assignment links back to this **Shift Schedule Assignment**.
+  </Step>
+</Steps>
+
+## Shift Request
+
+A **Shift Request** lets an employee ask to be assigned to a specific shift type. When approved, the system creates a **Shift Assignment** automatically.
+
+### Submitting a Shift Request
+
+<Steps>
+  <Step title="Open Shift Request">
+    Go to **HR > Attendance > Shift Request > New**.
+  </Step>
+  <Step title="Fill in the details">
+    - **Shift Type** — the requested shift
+    - **Employee** — pre-filled from the logged-in employee
+    - **From Date** — when the requested shift should start
+    - **To Date** — optional end date
+    - **Approver** — pre-filled from the employee's **Shift Request Approver** field
+  </Step>
+  <Step title="Submit">
+    The approver receives a notification. They set **Status** to `Approved` or `Rejected` and submit. Approval automatically creates a **Shift Assignment** for the requested period.
+  </Step>
+</Steps>
+
+### Shift Request fields reference
+
+| Field | Description |
+|-------|-------------|
+| **Shift Type** | The requested shift. |
+| **Employee** | The requesting employee. |
+| **From Date** | Start date of the requested shift. |
+| **To Date** | Optional end date. |
+| **Status** | Draft → Approved or Rejected. |
+| **Approver** | The user who approves or rejects. |
+
+## Auto-attendance processing
+
+Auto-attendance runs as a scheduled task. You can also trigger it manually from a specific **Shift Type** document.
+
+### How it works
+
+<Steps>
+  <Step title="Collect checkin logs">
+    The system fetches all **Employee Checkin** records for this shift where:
+    - **Skip Auto Attendance** is unchecked
+    - **Attendance** is not yet linked
+    - **Time** is on or after **Process Attendance After**
+    - **Shift Actual End** is before **Last Sync of Checkin**
+  </Step>
+  <Step title="Group by employee and shift window">
+    Logs are grouped by employee and shift start. Each group represents one employee's checkins for one shift occurrence.
+  </Step>
+  <Step title="Calculate working hours">
+    Working hours are calculated per the **Working Hours Calculation Based On** and **Determine Check-in and Check-out** settings.
+  </Step>
+  <Step title="Determine attendance status">
+    - Hours below **Working Hours Threshold for Absent** → **Absent**
+    - Hours below **Working Hours Threshold for Half Day** (but above Absent threshold) → **Half Day**
+    - Otherwise → **Present**
+
+    Late entry and early exit flags are set based on grace period settings.
+  </Step>
+  <Step title="Create attendance records">
+    For each group, the system calls `mark_attendance_and_link_log`, which creates a submitted **Attendance** record and links each checkin log to it.
+  </Step>
+  <Step title="Mark absences for missing logs">
+    After processing checkin-based attendance, the system marks **Absent** for any working day (after **Process Attendance After**) where no attendance was recorded and the employee was assigned to this shift.
+  </Step>
+</Steps>
+
+### Manually triggering auto-attendance
+
+Open a **Shift Type** document and click **Process Auto Attendance** in the top toolbar. If there are more than 1,000 unprocessed checkins, the job is queued in the background and you can monitor it via **RQ Job**.
+
+<Warning>
+Do not manually reset **Last Sync of Checkin** to an earlier date unless you are certain all checkin logs from all locations have been synced. Resetting it will reprocess logs and may create duplicate attendance records.
+</Warning>

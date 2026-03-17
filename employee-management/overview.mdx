@@ -1,0 +1,34 @@
+---
+title: "Employee management"
+description: "Manage the complete employee lifecycle in Frappe HR — from onboarding through transfers, promotions, and exit."
+keywords: ["employee management", "HR", "onboarding", "promotion", "transfer", "separation", "exit interview"]
+---
+
+Frappe HR provides a set of interconnected documents for managing every stage of an employee's time at your company. Each stage maps to one or more dedicated doctypes that track changes, trigger tasks, and update the employee record automatically.
+
+<CardGroup cols={2}>
+  <Card title="Employee lifecycle" icon="id-card" href="/employee-management/employee-lifecycle">
+    Employee records, status transitions, grades, and work history tracking
+  </Card>
+  <Card title="Onboarding" icon="door-open" href="/employee-management/onboarding">
+    Onboarding templates, activity tasks, and automated project creation
+  </Card>
+  <Card title="Transfers and promotions" icon="arrows-up-down" href="/employee-management/transfers-promotions">
+    Transfer between departments or companies and record promotions with revised salary
+  </Card>
+  <Card title="Separation and exit" icon="right-from-bracket" href="/employee-management/separation-exit">
+    Separation checklists, exit interviews, and full and final settlement
+  </Card>
+</CardGroup>
+
+## How the modules fit together
+
+All employee management documents share a common pattern:
+
+1. You create and submit a document (Onboarding, Transfer, Promotion, or Separation).
+2. Frappe HR updates the **Employee** record automatically based on the submitted document.
+3. A history entry is recorded in the employee's internal work history so you can audit every change.
+
+<Note>
+Most documents in this section are **submittable** — they must be submitted before they take effect on the employee record. Cancelling a submitted document reverses the changes.
+</Note>

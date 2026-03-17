@@ -1,0 +1,132 @@
+---
+title: "Job applicants"
+description: "Track candidates through your hiring pipeline"
+keywords: ["job applicant", "candidate", "hiring pipeline", "applicant status", "employee referral", "applicant source"]
+---
+
+A **Job Applicant** record represents a single candidate in your hiring pipeline. It links to a **Job Opening**, tracks the candidate's status as they move through screening and interviews, and connects to any **Job Offer** created for them.
+
+## Job Applicant fields
+
+| Field | Description |
+|---|---|
+| `applicant_name` | Candidate's full name. Required. If not provided, Frappe HR guesses it from the email address. |
+| `email_id` | Candidate's email address. Required. Used as the document's unique name. |
+| `phone_number` | Candidate's phone number. |
+| `country` | Candidate's country of residence. |
+| `job_title` | Links to the **Job Opening** the candidate is applying for. |
+| `designation` | Fetched automatically from the linked job opening. |
+| `status` | Current pipeline stage. See [Pipeline statuses](#pipeline-statuses) below. |
+| `source` | How the candidate was found. Links to a **Job Applicant Source** master. |
+| `source_name` | Visible when **Source** is **Employee Referral**. Links to the referring employee. |
+| `employee_referral` | Read-only. Links to the **Employee Referral** document that generated this applicant. |
+| `applicant_rating` | Star rating (0–5) for quick candidate scoring. |
+| `cover_letter` | Candidate's cover letter text. |
+| `resume_attachment` | Uploaded resume file. |
+| `resume_link` | External link to the candidate's resume or LinkedIn profile. |
+| `lower_range` / `upper_range` | Candidate's stated salary expectation range. |
+
+## Creating a Job Applicant
+
+<Steps>
+  <Step title="Open the form">
+    Go to **HR → Recruitment → Job Applicant** and click **New**.
+  </Step>
+  <Step title="Fill in the required fields">
+    Enter the **Applicant Name**, **Email Address**, and select the **Job Opening** in the **Job Opening** field (`job_title`). The **Designation** populates automatically from the opening.
+  </Step>
+  <Step title="Set the source">
+    Choose a **Source** to track where this candidate came from. If the source is **Employee Referral**, select the referring employee in **Source Name**.
+  </Step>
+  <Step title="Attach the resume">
+    Upload a file in **Resume Attachment** or paste a URL in **Resume Link**.
+  </Step>
+  <Step title="Save">
+    Click **Save**. The applicant is created with status **Open**.
+  </Step>
+</Steps>
+
+<Note>
+Each candidate can apply more than once (for a different opening or as a reapplication). If the email address already exists as a **Job Applicant**, Frappe HR appends a number suffix to keep the name unique.
+</Note>
+
+## Pipeline statuses
+
+Move a **Job Applicant** through these statuses as the hiring process progresses:
+
+| Status | Meaning |
+|---|---|
+| **Open** | Application received; under initial review |
+| **Replied** | HR has responded to the candidate |
+| **Hold** | Candidate is paused — not yet rejected or advanced |
+| **Accepted** | Candidate has been selected for hire |
+| **Rejected** | Candidate has been eliminated from consideration |
+
+When a **Job Offer** linked to this applicant is accepted or rejected, Frappe HR automatically sets the applicant status to match.
+
+## Applicant sources
+
+Use the **Source** field to track the effectiveness of your hiring channels. Common sources include:
+
+- Direct application (website)
+- Employee Referral
+- Job boards (LinkedIn, Indeed, etc.)
+- Recruitment agency
+- Campus recruitment
+
+You can create additional source options in **HR → Recruitment → Job Applicant Source**.
+
+## Employee Referral workflow
+
+**Employee Referral** allows your employees to formally refer external candidates. The referral tracks the candidate's details, the referring employee, and referral bonus eligibility — all separately from the main applicant pipeline.
+
+<Steps>
+  <Step title="Create an Employee Referral">
+    An employee (or HR on their behalf) goes to **HR → Recruitment → Employee Referral** and clicks **New**. Fill in the candidate's **First Name**, **Last Name**, **Email**, **For Designation**, and optionally attach a **Resume**.
+  </Step>
+  <Step title="Set referral bonus eligibility">
+    Check **Is Applicable for Referral Bonus** if the referring employee is eligible for a bonus on successful hire. The **Referral Bonus Payment Status** is set to **Unpaid** automatically.
+  </Step>
+  <Step title="Submit the referral">
+    Click **Submit**. The referral status starts as **Pending**.
+  </Step>
+  <Step title="Create the Job Applicant">
+    Click **Create Job Applicant** on the submitted **Employee Referral** form. A **Job Applicant** is created automatically with:
+    - **Source** set to **Employee Referral**
+    - **Employee Referral** linked back to this document
+    - Applicant name, email, phone, and resume copied from the referral
+
+    The **Employee Referral** status changes to **In Process**.
+  </Step>
+  <Step title="Status syncs automatically">
+    As the **Job Applicant** status changes, the **Employee Referral** status mirrors it:
+    - **Open**, **Replied**, or **Hold** → referral stays **In Process**
+    - **Accepted** → referral status becomes **Accepted**
+    - **Rejected** → referral status becomes **Rejected**
+  </Step>
+  <Step title="Pay the referral bonus">
+    If the candidate is hired and the referral is bonus-eligible, click **Create Additional Salary** on the **Employee Referral** form to generate an **Additional Salary** document for the referring employee.
+  </Step>
+</Steps>
+
+<Tip>
+Duplicate referrals for the same email address are blocked. Frappe HR raises an error if a non-cancelled **Employee Referral** already exists for that email.
+</Tip>
+
+## Linking to interview rounds
+
+Once you are ready to schedule an interview, create it directly from the **Job Applicant** record.
+
+<Steps>
+  <Step title="Open the applicant form">
+    Open the **Job Applicant** you want to interview.
+  </Step>
+  <Step title="Create an Interview">
+    Click **Create Interview** (shown in the document action buttons). Select an **Interview Round** in the dialog. Frappe HR validates that the round's designation matches the applicant's designation.
+  </Step>
+  <Step title="Review pre-filled fields">
+    The new **Interview** document is pre-filled with the job applicant, job opening, designation, resume link, and default interviewers from the round definition. Adjust the **Scheduled On**, **From Time**, and **To Time** before saving.
+  </Step>
+</Steps>
+
+All interviews for a candidate are visible in the **Interviews** section of the **Job Applicant** dashboard, showing the round name, scheduled date, average rating, and current status.

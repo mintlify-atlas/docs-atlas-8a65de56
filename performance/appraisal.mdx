@@ -1,0 +1,140 @@
+---
+title: "Appraisal"
+description: "Record KRA scores, self-appraisal ratings, and manager feedback to compute an employee's final performance score."
+keywords: ["appraisal", "performance review", "KRA score", "self appraisal", "final score", "goal score"]
+---
+
+An **Appraisal** is a submittable document that represents one employee's performance review for a specific **Appraisal Cycle**. It aggregates goal completion, self-appraisal ratings, and peer/manager feedback into a single **Final Score**.
+
+Appraisals are typically created in bulk from the **Appraisal Cycle** using **Create Appraisals**, but you can also create them individually.
+
+## Appraisal fields
+
+### Overview tab
+
+| Field | Description |
+|---|---|
+| **Series** | Auto-assigned naming series: `HR-APR-YYYY-`. |
+| **Employee** | The employee being appraised. Required. |
+| **Employee Name** | Fetched from the employee record. Read-only. |
+| **Department** / **Designation** | Fetched from the employee record. Read-only. |
+| **Company** | Required. |
+| **Appraisal Cycle** | The cycle this appraisal belongs to. Required. |
+| **Start Date** / **End Date** | Inherited from the cycle. Read-only. |
+| **Final Score** | Computed final score — average of the three score components (or custom formula). Read-only. |
+
+### KRAs tab
+
+| Field | Description |
+|---|---|
+| **Appraisal Template** | The template that defines KRAs and rating criteria. |
+| **Rate Goals Manually** | Read-only flag set by the cycle's **KRA Evaluation Method**. When checked, the **Goals** table is shown instead of the **KRA vs Goals** table. |
+| **KRA vs Goals** (`appraisal_kra`) | Visible when goal progress is automated. Shows each KRA, its **Weightage (%)**, **Goal Completion (%)**, and **Goal Score (weighted)**. Updated automatically when linked goals change. |
+| **Goal Score (%)** | Aggregate weighted goal score as a percentage. Read-only. |
+| **Goals** (`goals`) | Visible when **Rate Goals Manually** is enabled. Managers enter a star rating per KRA row. |
+| **Remarks** | Free-text field for noteworthy effort. Visible in manual rating mode. |
+| **Total Goal Score** | Sum of weighted scores across all KRA rows. Read-only. |
+
+### Self Appraisal tab
+
+| Field | Description |
+|---|---|
+| **Ratings** (`self_ratings`) | Table of rating criteria from the template. The employee rates themselves on each criterion. |
+| **Total Self Score** (`self_score`) | Weighted average of self-ratings. Read-only. |
+| **Reflections** | Free-text editor for the employee's comments and reflections. |
+
+### Feedback tab
+
+Displays the feedback history for this appraisal — all submitted **Employee Performance Feedback** documents from peers and managers. The **Average Feedback Score** (`avg_feedback_score`) shown here feeds into the final score calculation.
+
+## Creating an appraisal manually
+
+<Steps>
+  <Step title="Open Appraisal">
+    Go to **HR** → **Performance** → **Appraisal** and click **New**.
+  </Step>
+  <Step title="Select employee and cycle">
+    Choose the **Employee** and the **Appraisal Cycle**. Only one appraisal per employee per cycle is allowed — Frappe HR rejects duplicates.
+  </Step>
+  <Step title="Load the template">
+    Click **Set Appraisal Template** to pull the KRAs and rating criteria from the employee's appraisal template in the cycle's appraisee list. Alternatively, select the **Appraisal Template** manually and click **Get KRAs and Rating Criteria**.
+  </Step>
+  <Step title="Save">
+    Click **Save**. Goal scores populate automatically if the cycle uses `Automated Based on Goal Progress`.
+  </Step>
+</Steps>
+
+## Self-appraisal
+
+Employees complete the self-appraisal on the **Self Appraisal** tab.
+
+<Steps>
+  <Step title="Open your appraisal">
+    Employees can find their appraisal from **HR** → **Performance** → **Appraisal**, filtered to their own record.
+  </Step>
+  <Step title="Rate yourself">
+    In the **Ratings** table, enter a rating (0–5 stars) for each criterion. The **Total Self Score** updates automatically.
+  </Step>
+  <Step title="Add reflections">
+    Use the **Reflections** field to add qualitative notes about your performance, achievements, and areas for improvement.
+  </Step>
+  <Step title="Save">
+    Click **Save** to preserve the self-appraisal. The document remains in Draft until HR submits it.
+  </Step>
+</Steps>
+
+<Note>
+Employees have write access to their own appraisal but cannot submit it. Submission is reserved for HR roles.
+</Note>
+
+## Goal scores (automated method)
+
+When the cycle uses `Automated Based on Goal Progress`, the **KRA vs Goals** table is populated and updated automatically:
+
+1. Each row represents one KRA from the appraisal template.
+2. **Goal Completion (%)** = average `progress` of all non-archived, top-level goals for this employee, cycle, and KRA.
+3. **Goal Score (weighted)** = `goal_completion × per_weightage / 100`.
+4. **Total Goal Score** = sum of all Goal Score (weighted) values, then converted to a score out of 5.
+
+This recalculation happens whenever a linked goal is saved.
+
+## Manual goal rating
+
+When the cycle uses `Manual Rating`, the **KRA vs Goals** table is replaced by the **Goals** table:
+
+- Each row has a **KRA**, **Weightage (%)**, and a **Score** field (star rating, max 5).
+- Enter the score for each KRA row.
+- **Score Earned** = `score × per_weightage / 100`.
+- **Total Goal Score** = sum of all Score Earned values.
+
+<Warning>
+The **KRA Evaluation Method** on the **Appraisal Cycle** cannot be changed once appraisals have been created for that cycle.
+</Warning>
+
+## Final score calculation
+
+By default, the **Final Score** is the simple average of the three score components:
+
+```
+Final Score = (Total Goal Score + Average Feedback Score + Total Self Score) / 3
+```
+
+If **Calculate Final Score based on Formula** is enabled on the cycle, the formula entered there is evaluated instead. The formula has access to `goal_score`, `average_feedback_score`, `self_appraisal_score`, and all fields from the employee and cycle documents.
+
+## Appraisal status and submission
+
+| State | Description |
+|---|---|
+| **Draft** | Default state. The appraisal is editable. |
+| **Submitted** | Locked. Scores are final. Required before completing the cycle. |
+| **Cancelled** | Cancelled and excluded from all calculations. Can be amended. |
+
+To submit, click **Submit**. All appraisals for a cycle must be submitted before you can click **Complete Cycle** on the **Appraisal Cycle**.
+
+## Linking appraisal to salary revision
+
+After submitting an appraisal, you can use the **Final Score** to inform a salary revision. From the appraisal form, navigate to the employee's **Salary Structure Assignment** or **Salary Slip** to apply any increment. The appraisal reference can be noted in the salary revision document for audit purposes.
+
+<Tip>
+Use the **Appraisal Overview** report (HR → Reports → Appraisal Overview) to compare final scores across the organization and identify employees due for a salary revision.
+</Tip>

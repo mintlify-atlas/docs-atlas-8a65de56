@@ -1,0 +1,155 @@
+---
+title: "Architecture overview"
+description: "How Frappe HR is structured: dependencies, modules, key Python packages, frontend stack, and scheduled tasks"
+---
+
+## Dependencies
+
+Frappe HR is a Frappe Framework application. It depends on two upstream apps that must be installed on the same bench site:
+
+| Dependency | Required version |
+|---|---|
+| [Frappe Framework](https://github.com/frappe/frappe) | `>=17.0.0, <18.0.0` |
+| [ERPNext](https://github.com/frappe/erpnext) | `>=17.0.0, <18.0.0` |
+
+Frappe Framework provides the full-stack foundation: database ORM, REST API, authentication, scheduler, and the Desk UI. ERPNext provides accounting primitives (Company, Chart of Accounts, Payment Entry, Journal Entry) that Frappe HR extends for payroll and expense management.
+
+The Python package requires **Python ≥ 3.10**.
+
+## Repository layout
+
+```
+hrms/                   # Frappe app (Python backend + Desk JS)
+  api/                  # @frappe.whitelist() endpoints for the PWA
+  controllers/          # Shared controllers (reminders, boarding)
+  hr/                   # HR module: leave, attendance, recruitment, etc.
+    doctype/            # One subdirectory per DocType
+    report/             # Report definitions
+    utils.py            # HR utility functions
+  overrides/            # Subclasses that override ERPNext DocType classes
+  payroll/              # Payroll module: salary slips, payroll entry, tax
+    doctype/
+    report/
+    utils.py
+  regional/             # Country-specific override implementations
+    india/
+    united_arab_emirates/
+  tests/                # Shared test helpers
+  hooks.py              # Frappe app metadata and all hook declarations
+  install.py            # Post-install setup logic
+frontend/               # PWA (Progressive Web App) — Vue 3 + Ionic
+  src/
+  vite.config.js
+roster/                 # Shift roster app — Vue 3 (Desk-embedded)
+  src/
+docker/                 # Docker Compose setup for local development
+```
+
+## Module breakdown
+
+### `hrms/hr/`
+
+Contains all non-payroll HR functionality across these DocTypes (selected):
+
+- **Employee lifecycle** — Employee, Employee Onboarding, Employee Separation, Employee Transfer, Employee Promotion
+- **Leave & attendance** — Leave Application, Leave Allocation, Leave Type, Leave Period, Attendance, Employee Checkin, Shift Type, Shift Assignment
+- **Recruitment** — Job Opening, Job Applicant, Interview, Job Offer
+- **Expense management** — Expense Claim, Employee Advance, Travel Request
+- **Performance** — Appraisal, Appraisal Cycle, Appraisal Goal
+
+### `hrms/payroll/`
+
+Contains all payroll and compensation functionality:
+
+- **Salary** — Salary Slip, Salary Structure, Salary Structure Assignment, Salary Component
+- **Payroll runs** — Payroll Entry
+- **Tax** — Payroll Period, Income Tax Slab, Employee Tax Exemption Declaration, Employee Tax Exemption Proof Submission
+- **Other** — Additional Salary, Gratuity, Employee Benefit Application
+
+## Key Python modules
+
+### `hooks.py`
+
+The single source of truth for all Frappe hook registrations: scheduled tasks, document event listeners, DocType class overrides, JavaScript injections, and the regional overrides map. See [Hooks](./hooks) for a full walkthrough.
+
+### `controllers/`
+
+| File | Purpose |
+|---|---|
+| `employee_boarding_controller.py` | Base controller for Employee Onboarding and Separation; updates boarding status when linked Tasks change |
+| `employee_reminders.py` | Scheduled functions for birthday, work anniversary, and advance reminders |
+
+### `overrides/`
+
+Python subclasses that replace standard ERPNext DocType classes at runtime via `override_doctype_class` in `hooks.py`:
+
+| File | Overrides |
+|---|---|
+| `employee_master.py` | `Employee` — adds approver role management and onboarding validation |
+| `employee_timesheet.py` | `Timesheet` — adds employee-specific validations |
+| `employee_payment_entry.py` | `Payment Entry` — integrates with expense claim payments |
+| `employee_project.py` | `Project` — adds employee boarding status sync |
+| `company.py` | `Company` — validates HR accounts and creates fixtures |
+| `dashboard_overrides.py` | Custom dashboard data for Employee, Holiday List, Task, Project, Timesheet, Bank Account |
+
+### `api/`
+
+Whitelisted Python endpoints consumed by the PWA and roster app:
+
+| File | Contains |
+|---|---|
+| `__init__.py` | Leave, attendance, expense, advance, shift, notification, and utility endpoints |
+| `roster.py` | Shift roster CRUD and scheduling endpoints |
+| `oauth.py` | OAuth2 provider listing for the PWA login screen |
+| `system_settings.py` | System settings helpers (e.g. password login flag) |
+
+### `regional/`
+
+Country-specific function implementations that replace generic calculations when the company's country matches. See [Regional overrides](./regional-overrides) for how to add your own.
+
+## Frontend stack
+
+### PWA (`frontend/`)
+
+The Frappe HR mobile app is a Progressive Web App built with:
+
+- **Vue 3** — component framework
+- **Ionic 7** (`@ionic/vue`) — mobile-optimized UI components and navigation
+- **Frappe UI 0.1.x** — Frappe's Vue component library (tables, forms, dialogs)
+- **Vite 5** — build tool; `yarn dev` starts a hot-reload server
+- **Tailwind CSS 3** — utility-first styling
+- **vite-plugin-pwa** — service worker and manifest generation
+
+The built output is placed in `hrms/www/hrms.html` and served at `/hrms` by the Frappe bench.
+
+### Roster app (`roster/`)
+
+The shift roster is a Vue 3 TypeScript SPA embedded in the Frappe Desk at the `/hr` route. It uses the same Frappe UI library and Vite build pipeline.
+
+## Database
+
+Frappe HR uses **MariaDB** through Frappe's ORM. You never write raw DDL — DocType JSON files define the schema, and `bench migrate` applies any changes. Frappe manages table creation, field additions, and index management automatically.
+
+In the Docker setup the MariaDB service runs version **10.8** with `utf8mb4` charset and `utf8mb4_unicode_ci` collation.
+
+## Scheduled tasks
+
+All scheduled jobs are registered in `hooks.py` under `scheduler_events`. The Frappe scheduler runs these automatically when `bench start` is running.
+
+| Frequency | Function | Purpose |
+|---|---|---|
+| `all` (every minute) | `interview.send_interview_reminder` | Send reminders for upcoming interviews |
+| `hourly` | `daily_work_summary_group.trigger_emails` | Trigger daily work summary email prompts |
+| `hourly_long` | `shift_type.update_last_sync_of_checkin` | Sync biometric check-in data |
+| `hourly_long` | `shift_type.process_auto_attendance_for_all_shifts` | Mark attendance from check-in logs |
+| `hourly_long` | `shift_schedule_assignment.process_auto_shift_creation` | Auto-create shift assignments |
+| `daily` | `employee_reminders.send_birthday_reminders` | Birthday email notifications |
+| `daily` | `employee_reminders.send_work_anniversary_reminders` | Work anniversary notifications |
+| `daily` | `daily_work_summary_group.send_summary` | Send compiled daily work summary |
+| `daily` | `interview.send_daily_feedback_reminder` | Remind interviewers to submit feedback |
+| `daily` | `job_opening.close_expired_job_openings` | Close job openings past their closing date |
+| `daily_long` | `leave_ledger_entry.process_expired_allocation` | Expire lapsed leave allocations |
+| `daily_long` | `hr.utils.generate_leave_encashment` | Auto-generate leave encashment records |
+| `daily_long` | `hr.utils.allocate_earned_leaves` | Credit earned leave to employee balances |
+| `weekly` | `employee_reminders.send_reminders_in_advance_weekly` | Weekly advance reminders (e.g. upcoming anniversaries) |
+| `monthly` | `employee_reminders.send_reminders_in_advance_monthly` | Monthly advance reminders |

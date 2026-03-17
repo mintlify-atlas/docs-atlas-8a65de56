@@ -1,0 +1,128 @@
+---
+title: Income tax
+description: Configure income tax slabs, payroll periods, employee tax exemption declarations, proof submissions, and automatic tax withholding.
+keywords: [income tax, tax slab, payroll period, tax exemption, HRA exemption, marginal relief, TDS, India payroll]
+---
+
+Frappe HR computes income tax automatically during payroll processing. The system spreads the projected annual tax liability across all remaining pay cycles in the payroll period, adjusting each cycle as new information (declarations, proof submissions, additional earnings) becomes available.
+
+## Payroll period
+
+A **Payroll Period** defines the tax year used for income tax computation. Go to **Payroll > Payroll Period > New**.
+
+| Field | Description |
+|---|---|
+| **Company** | The company this period applies to |
+| **Start Date** | First day of the tax year (e.g., 1 April for India) |
+| **End Date** | Last day of the tax year |
+
+The system uses the payroll period to:
+- Annualise the employee's earnings for tax bracket lookup.
+- Track the total tax deducted and projected across all remaining cycles.
+- Determine when mid-year joiners need opening balance entries.
+
+<Note>
+Create one **Payroll Period** per tax year per company. Without a payroll period, income tax computation falls back to the current calendar year.
+</Note>
+
+## Income Tax Slab
+
+An **Income Tax Slab** defines the tax rate applicable to each income bracket. Go to **Payroll > Income Tax Slab > New**.
+
+### Fields
+
+| Field | Description |
+|---|---|
+| **Effective from** | Date from which this slab is applicable |
+| **Company** | (Optional) Scope the slab to a specific company. Leave blank for all companies. |
+| **Currency** | Currency for the income thresholds; auto-fetched from the company's default currency |
+| **Standard Tax Exemption Amount** | A flat deduction subtracted from annual taxable income before applying slab rates (e.g., India's standard deduction) |
+| **Allow Tax Exemption** | Enable to factor in the employee's **Tax Exemption Declaration** when computing taxable income |
+| **Taxable Income Relief Threshold Limit** | Maximum annual taxable income eligible for full tax relief — no tax is applied when income does not exceed this limit (marginal relief support) |
+| **Taxable Salary Slabs** | Table of income brackets with `From`, `To`, `Percent Deduction`, and an optional `Condition` |
+| **Other Taxes and Charges** | Additional levies applied as a percentage of the computed income tax (e.g., surcharge, health and education cess) |
+
+### Taxable Salary Slab rows
+
+| Field | Description |
+|---|---|
+| **From Amount** | Lower bound of the income bracket |
+| **To Amount** | Upper bound (`0` means no upper limit) |
+| **Percent Deduction** | Tax rate for income within this bracket |
+| **Condition** | Optional Python expression; the slab applies only when the condition is true |
+
+### Example slab (India, simplified)
+
+| From | To | Rate |
+|---|---|---|
+| 0 | 400,000 | 0% |
+| 400,001 | 800,000 | 5% |
+| 800,001 | 1,200,000 | 10% |
+| 1,200,001 | 1,600,000 | 15% |
+| 1,600,001 | 2,000,000 | 20% |
+| 2,000,001 | 2,400,000 | 25% |
+| 2,400,001 | 0 | 30% |
+
+Submit the **Income Tax Slab**. You can then select it on a **Salary Structure Assignment**.
+
+## Linking the slab to an employee
+
+On the **Salary Structure Assignment**, set the **Income Tax Slab** field. The salary structure must contain a deduction component with **Variable Based on Taxable Salary** enabled — this is the component whose amount the system auto-computes from the slab.
+
+If the structure has a tax component but the assignment has no slab, saving the assignment throws a validation error.
+
+## Employee Tax Exemption Declaration
+
+Go to **Payroll > Employee Tax Exemption Declaration > New**.
+
+Employees declare their planned investments and eligible deductions (Section 80C, 80D, HRA, LTA, etc.) at the start of the tax year. When **Allow Tax Exemption** is enabled on the income tax slab, these declared amounts reduce the annual taxable income used for tax computation.
+
+The declaration is submitted once per payroll period per employee. The employee can update it during the year; the system adjusts future tax deductions accordingly.
+
+### HRA exemption calculation
+
+Frappe HR calculates HRA exemption automatically based on the least of:
+
+1. Actual HRA received
+2. 50% of basic salary (metro cities) or 40% (non-metro)
+3. Actual rent paid minus 10% of basic salary
+
+The employee provides rent details in the declaration. The computed HRA exemption is subtracted from taxable income before applying slab rates.
+
+## Employee Tax Exemption Proof Submission
+
+Go to **Payroll > Employee Tax Exemption Proof Submission > New**.
+
+At the end of the tax year, employees submit proof (investment statements, rent receipts) to substantiate their declarations. Only the amounts backed by submitted proof are allowed as exemptions in the final payroll cycles.
+
+If proof is not submitted, and the **Payroll Entry** has **Deduct Tax For Unsubmitted Tax Exemption Proof** enabled, the system taxes the employee without the benefit of their declared exemptions for that cycle.
+
+## Tax withholding at source
+
+The income tax component (with **Variable Based on Taxable Salary** enabled) is computed as follows during each salary slip:
+
+1. Annualise all earnings and additional salaries for the payroll period.
+2. Subtract statutory deductions, the standard exemption, approved tax exemption declarations, and components marked **Exempted from Income Tax**.
+3. Apply the tax slab to the remaining annual taxable income.
+4. Add any surcharges or cess from **Other Taxes and Charges**.
+5. Subtract tax already deducted in previous cycles (**Income Tax Deducted Till Date**).
+6. Divide the remaining tax liability equally across the remaining cycles.
+
+The result is the **Current Month Income Tax** amount on the salary slip.
+
+### Opening balances for mid-year joiners
+
+When an employee joins mid-year, set the following on their **Salary Structure Assignment**:
+
+- **Taxable Earnings Till Date** — annual taxable earnings already received from the previous employer
+- **Tax Deducted Till Date** — tax already deducted by the previous employer
+
+The system uses these to correctly compute the remaining tax liability for the year.
+
+## Marginal relief
+
+If **Taxable Income Relief Threshold Limit** is set on the income tax slab, the system applies marginal relief: when an employee's income exceeds the threshold by a small margin, the tax is capped so it does not exceed the income above the threshold. This prevents the effective tax rate from being unfairly high near the slab boundary.
+
+<Tip>
+To force full tax deduction in a single cycle (e.g., for a large bonus), enable **Deduct Full Tax on Selected Payroll Date** on the relevant salary component or additional salary.
+</Tip>
