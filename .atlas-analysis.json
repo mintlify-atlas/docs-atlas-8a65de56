@@ -1,0 +1,174 @@
+{
+  "projectType": "saas",
+  "projectName": "Frappe HR",
+  "projectDescription": "Open source, modern HR and Payroll software built on the Frappe Framework, covering the full employee lifecycle from onboarding to exit.",
+  "theme": "linden",
+  "primaryColor": "#141414",
+  "lightColor": "#7c7c7c",
+  "darkColor": "#c8c8c8",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "installation",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Employee Management",
+            "pages": [
+              "employee-management/overview",
+              "employee-management/employee-lifecycle",
+              "employee-management/onboarding",
+              "employee-management/transfers-promotions",
+              "employee-management/separation-exit"
+            ]
+          },
+          {
+            "group": "Leave & Attendance",
+            "pages": [
+              "leave-attendance/overview",
+              "leave-attendance/leave-types",
+              "leave-attendance/leave-policy",
+              "leave-attendance/leave-allocation",
+              "leave-attendance/leave-application",
+              "leave-attendance/attendance",
+              "leave-attendance/shift-management"
+            ]
+          },
+          {
+            "group": "Payroll",
+            "pages": [
+              "payroll/overview",
+              "payroll/salary-structure",
+              "payroll/salary-components",
+              "payroll/payroll-entry",
+              "payroll/salary-slip",
+              "payroll/additional-salary",
+              "payroll/income-tax",
+              "payroll/gratuity"
+            ]
+          },
+          {
+            "group": "Performance Management",
+            "pages": [
+              "performance/overview",
+              "performance/goals",
+              "performance/appraisal-cycle",
+              "performance/appraisal",
+              "performance/feedback"
+            ]
+          },
+          {
+            "group": "Recruitment",
+            "pages": [
+              "recruitment/overview",
+              "recruitment/job-opening",
+              "recruitment/job-applicant",
+              "recruitment/interview",
+              "recruitment/job-offer"
+            ]
+          },
+          {
+            "group": "Expense Management",
+            "pages": [
+              "expenses/overview",
+              "expenses/expense-claim",
+              "expenses/employee-advance",
+              "expenses/travel-request"
+            ]
+          },
+          {
+            "group": "Mobile App",
+            "pages": [
+              "mobile/overview",
+              "mobile/leave",
+              "mobile/attendance",
+              "mobile/expense-claim",
+              "mobile/salary-slip"
+            ]
+          },
+          {
+            "group": "Reports & Analytics",
+            "pages": [
+              "reports/overview",
+              "reports/attendance-reports",
+              "reports/leave-reports",
+              "reports/payroll-reports",
+              "reports/recruitment-analytics"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Developer Guide",
+        "groups": [
+          {
+            "group": "Setup",
+            "pages": [
+              "developer/architecture",
+              "developer/local-setup",
+              "developer/docker-setup"
+            ]
+          },
+          {
+            "group": "Customization",
+            "pages": [
+              "developer/regional-overrides",
+              "developer/hooks",
+              "developer/custom-doctypes"
+            ]
+          },
+          {
+            "group": "API Reference",
+            "pages": [
+              "developer/api-overview",
+              "developer/api-leave",
+              "developer/api-attendance",
+              "developer/api-payroll"
+            ]
+          },
+          {
+            "group": "Contributing",
+            "pages": [
+              "developer/contributing",
+              "developer/testing"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Employee Lifecycle Management (onboarding, transfers, promotions, separation)",
+    "Leave & Attendance with shift management and geolocation check-in",
+    "Payroll processing with salary structures, income tax slabs, and gratuity",
+    "Performance Management with goals, KRAs, and appraisal cycles",
+    "Recruitment pipeline from job openings to offers",
+    "Expense Claims and Employee Advances with approval workflows",
+    "Mobile App (PWA) for leaves, attendance, and salary slips",
+    "Regional overrides for India-specific tax calculations",
+    "Integrated reporting and analytics across all HR modules"
+  ],
+  "publicApiSurface": [
+    "hrms.hr.doctype.leave_application.leave_application",
+    "hrms.hr.doctype.attendance.attendance",
+    "hrms.hr.doctype.employee_checkin.employee_checkin",
+    "hrms.hr.doctype.expense_claim.expense_claim",
+    "hrms.hr.doctype.employee_advance.employee_advance",
+    "hrms.payroll.doctype.salary_slip.salary_slip",
+    "hrms.payroll.doctype.payroll_entry.payroll_entry",
+    "hrms.payroll.doctype.salary_structure.salary_structure",
+    "hrms.hr.doctype.appraisal.appraisal",
+    "hrms.hr.doctype.job_opening.job_opening",
+    "hrms.hr.doctype.interview.interview",
+    "hrms.api.roster",
+    "hrms.api.oauth",
+    "hrms.api.system_settings"
+  ]
+}
